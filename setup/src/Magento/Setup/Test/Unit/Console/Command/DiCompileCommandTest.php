@@ -22,7 +22,7 @@ use Magento\Setup\Module\Di\App\Task\Manager;
 use Magento\Setup\Module\Di\App\Task\OperationFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Formatter\OutputFormatterInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -62,8 +62,8 @@ class DiCompileCommandTest extends TestCase
     /** @var  OutputInterface|MockObject */
     private $outputMock;
 
-    /** @var OutputFormatter */
-    private $outputFormatter;
+    /** @var OutputFormatterInterface|MockObject */
+    private $outputFormatterMock;
 
     /** @var Filesystem\Io\File|MockObject */
     private $fileMock;
@@ -113,10 +113,12 @@ class DiCompileCommandTest extends TestCase
             [ComponentRegistrar::LIBRARY, ['/path/to/library/one', '/path (1)/to/library/two']],
         ]);
 
-        $this->outputFormatter = new OutputFormatter();
+        $this->outputFormatterMock = $this->createMock(
+            OutputFormatterInterface::class
+        );
         $this->outputMock = $this->getMockForAbstractClass(OutputInterface::class);
         $this->outputMock->method('getFormatter')
-            ->willReturn($this->outputFormatter);
+            ->willReturn($this->outputFormatterMock);
         $this->fileMock = $this->getMockBuilder(Filesystem\Io\File::class)
             ->disableOriginalConstructor()
             ->getMock();

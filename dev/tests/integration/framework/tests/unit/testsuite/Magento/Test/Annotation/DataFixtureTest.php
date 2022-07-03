@@ -38,15 +38,14 @@ class DataFixtureTest extends TestCase
     protected function setUp(): void
     {
         $this->object = $this->getMockBuilder(DataFixture::class)
-            ->onlyMethods(['_applyOneFixture', 'getTestKey'])
-            ->addMethods(['getComponentRegistrar'])
+            ->setMethods(['_applyOneFixture', 'getComponentRegistrar', 'getTestKey'])
             ->getMock();
         $this->testsIsolationMock = $this->getMockBuilder(TestsIsolation::class)
-            ->onlyMethods(['createDbSnapshot', 'checkTestIsolation'])
+            ->setMethods(['createDbSnapshot', 'checkTestIsolation'])
             ->getMock();
         /** @var ObjectManagerInterface|\PHPUnit\Framework\MockObject\MockObject $objectManager */
         $objectManager = $this->getMockBuilder(ObjectManagerInterface::class)
-            ->onlyMethods(['get'])
+            ->setMethods(['get'])
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
         $objectManager->expects($this->atLeastOnce())->method('get')->with(TestsIsolation::class)
@@ -188,13 +187,16 @@ class DataFixtureTest extends TestCase
     public function testStartTransactionMethodAnnotation(): void
     {
         $this->createResolverMock();
-        $this->object
+        $this->object->expects($this->at(0))
             ->method('_applyOneFixture')
-            ->withConsecutive(
-                [[__CLASS__, 'sampleFixtureTwo']],
-                [$this->stringEndsWith('path/to/fixture/script.php')]
-            );
-
+            ->with([__CLASS__, 'sampleFixtureTwo']);
+        $this->object->expects(
+            $this->at(1)
+        )->method(
+            '_applyOneFixture'
+        )->with(
+            $this->stringEndsWith('path/to/fixture/script.php')
+        );
         $this->object->startTransaction($this);
     }
 
@@ -267,7 +269,7 @@ class DataFixtureTest extends TestCase
     {
         $mock = $this->getMockBuilder(Resolver::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['applyDataFixtures', 'getComponentRegistrar'])
+            ->setMethods(['applyDataFixtures', 'getComponentRegistrar'])
             ->getMock();
         $mock->expects($this->any())->method('getComponentRegistrar')
             ->willReturn(new ComponentRegistrar());

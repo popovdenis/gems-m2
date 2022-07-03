@@ -62,6 +62,7 @@ class NewsletterTemplateTest extends \Magento\TestFramework\TestCase\AbstractBac
     public function testSaveActionCreateNewTemplateAndVerifySuccessMessage()
     {
         $this->getRequest()->setParam('id', $this->model->getId());
+        $this->getRequest()->setParam('is_legacy', 1);
 
         $this->dispatch('backend/newsletter/template/save');
 
@@ -97,6 +98,7 @@ class NewsletterTemplateTest extends \Magento\TestFramework\TestCase\AbstractBac
         $this->assertEquals('some_unique_code', $this->model->getTemplateCode());
 
         $this->getRequest()->setParam('id', $this->model->getId());
+        $this->getRequest()->setParam('is_legacy', 1);
 
         $this->dispatch('backend/newsletter/template/save');
 

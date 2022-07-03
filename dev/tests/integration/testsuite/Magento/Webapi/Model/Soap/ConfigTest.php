@@ -90,8 +90,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
             'resources' => [
                 'Magento_Customer::customer',
             ],
-            'parameters' => [],
-            'input-array-size-limit' => null,
+            'parameters' => []
         ];
         $actual = $this->soapConfig->getServiceMethodInfo(
             'customerCustomerRepositoryV1GetById',

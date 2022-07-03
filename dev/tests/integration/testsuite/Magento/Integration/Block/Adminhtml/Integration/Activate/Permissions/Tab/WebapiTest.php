@@ -48,8 +48,7 @@ class WebapiTest extends \PHPUnit\Framework\TestCase
 
     public function testGetResourcesTreeJson()
     {
-        $expectedResult = '[{"id":"Magento_Backend::dashboard","li_attr":{"data-id":"Magento_Backend::dashboard"},' .
-            '"text":"Dashboard","children":[],"state":';
+        $expectedResult = '[{"attr":{"data-id":"Magento_Backend::dashboard"},"data":"Dashboard","children":[],"state":';
         $this->registry->register(
             IntegrationController::REGISTRY_KEY_CURRENT_INTEGRATION,
             $this->getFixtureIntegration()->getData()

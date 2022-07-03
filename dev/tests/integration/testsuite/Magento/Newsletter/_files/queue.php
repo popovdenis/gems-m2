@@ -33,7 +33,7 @@ $queue->setTemplateId(
 )->setQueueStatus(
     \Magento\Newsletter\Model\Queue::STATUS_NEVER
 )->setQueueStartAtByString(
-    null
+    0
 )->setStores(
     [$currentStore, $otherStore]
 )->save();

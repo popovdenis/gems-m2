@@ -16,7 +16,6 @@ use Magento\Setup\Module\Di\Code\Generator\PluginList;
 use Magento\Setup\Module\Di\Code\Reader\Type;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 class InterceptionConfigurationBuilderTest extends TestCase
 {
@@ -115,11 +114,10 @@ class InterceptionConfigurationBuilderTest extends TestCase
      */
     public function getInterceptionConfigurationDataProvider()
     {
-        $someInstance = new stdClass();
         return [
             [null],
-            [['plugin' => ['instance' => $someInstance]]],
-            [['plugin' => ['instance' => $someInstance], 'plugin2' => ['instance' => $someInstance]]]
+            [['plugin' => ['instance' => 'someinstance']]],
+            [['plugin' => ['instance' => 'someinstance'], 'plugin2' => ['instance' => 'someinstance']]]
         ];
     }
 }

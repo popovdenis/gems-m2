@@ -63,14 +63,6 @@ class ReindexAllTest extends \PHPUnit\Framework\TestCase
      */
     private $productRepository;
 
-    /**
-     * Elasticsearch7 engine configuration is also compatible with OpenSearch 1
-     */
-    private const ENGINE_SUPPORTED_VERSIONS = [
-        7 => 'elasticsearch7',
-        1 => 'elasticsearch7',
-    ];
-
     protected function setUp(): void
     {
         $this->connectionManager = Bootstrap::getObjectManager()->create(ConnectionManager::class);
@@ -87,14 +79,7 @@ class ReindexAllTest extends \PHPUnit\Framework\TestCase
     protected function assertPreConditions(): void
     {
         $currentEngine = Bootstrap::getObjectManager()->get(EngineResolverInterface::class)->getCurrentSearchEngine();
-        $this->assertEquals(
-            $this->getInstalledSearchEngine(),
-            $currentEngine,
-            sprintf(
-                'Search engine configuration "%s" is not compatible with the installed version',
-                $currentEngine
-            )
-        );
+        $this->assertEquals($this->getInstalledSearchEngine(), $currentEngine);
     }
 
     /**
@@ -159,7 +144,13 @@ class ReindexAllTest extends \PHPUnit\Framework\TestCase
         $productThird = $this->productRepository->get('fulltext-3');
         $productFourth = $this->productRepository->get('fulltext-4');
         $productFifth = $this->productRepository->get('fulltext-5');
-
+        $correctSortedIds = [
+            $productFirst->getId(),
+            $productFourth->getId(),
+            $productSecond->getId(),
+            $productFifth->getId(),
+            $productThird->getId(),
+        ];
         $this->reindexAll();
         $result = $this->sortByName();
         $firstInSearchResults = (int) $result[0]['_id'];
@@ -167,17 +158,15 @@ class ReindexAllTest extends \PHPUnit\Framework\TestCase
         $thirdInSearchResults = (int) $result[2]['_id'];
         $fourthInSearchResults = (int) $result[3]['_id'];
         $fifthInSearchResults = (int) $result[4]['_id'];
-
-        self::assertCount(5, $result);
-        self::assertEqualsCanonicalizing(
-            [$productFirst->getId(), $productFourth->getId()],
-            [$firstInSearchResults, $secondInSearchResults]
-        );
-        self::assertEqualsCanonicalizing(
-            [$productSecond->getId(), $productFifth->getId()],
-            [$thirdInSearchResults, $fourthInSearchResults]
-        );
-        self::assertEquals($productThird->getId(), $fifthInSearchResults);
+        $actualSortedIds = [
+            $firstInSearchResults,
+            $secondInSearchResults,
+            $thirdInSearchResults,
+            $fourthInSearchResults,
+            $fifthInSearchResults
+        ];
+        $this->assertCount(5, $result);
+        $this->assertEquals($correctSortedIds, $actualSortedIds);
     }
 
     /**
@@ -185,28 +174,15 @@ class ReindexAllTest extends \PHPUnit\Framework\TestCase
      *
      * @magentoConfigFixture current_store catalog/search/elasticsearch_index_prefix indexerhandlertest_configurable
      * @magentoDataFixture Magento/ConfigurableProduct/_files/configurable_products.php
-     * @magentoDataFixture Magento/Catalog/_files/products.php
-     * @dataProvider searchSpecificProductDataProvider
-     * @param string $searchName
-     * @param string $sku
-     * @param int $expectedCount
      */
-    public function testSearchSpecificProduct(string $searchName, string $sku, int $expectedCount)
+    public function testSearchSpecificProduct()
     {
         $this->reindexAll();
-        $result = $this->searchByName($searchName);
-        self::assertCount($expectedCount, $result);
+        $result = $this->searchByName('12345');
+        self::assertCount(1, $result);
 
-        $specificProduct = $this->productRepository->get($sku);
+        $specificProduct = $this->productRepository->get('configurable_12345');
         self::assertEquals($specificProduct->getId(), $result[0]['_id']);
-    }
-
-    public function searchSpecificProductDataProvider(): array
-    {
-        return [
-            'search by numeric name' => ['12345', 'configurable_12345', 1],
-            'search by name with diacritics' => ['Cùstöm Dèsign', 'custom-design-simple-product', 1],
-        ];
     }
 
     /**
@@ -294,7 +270,7 @@ class ReindexAllTest extends \PHPUnit\Framework\TestCase
         if (!$this->searchEngine) {
             // phpstan:ignore "Class Magento\TestModuleCatalogSearch\Model\ElasticsearchVersionChecker not found."
             $version = Bootstrap::getObjectManager()->get(ElasticsearchVersionChecker::class)->getVersion();
-            $this->searchEngine = self::ENGINE_SUPPORTED_VERSIONS[$version] ?? 'elasticsearch' . $version;
+            $this->searchEngine = 'elasticsearch' . $version;
         }
         return $this->searchEngine;
     }

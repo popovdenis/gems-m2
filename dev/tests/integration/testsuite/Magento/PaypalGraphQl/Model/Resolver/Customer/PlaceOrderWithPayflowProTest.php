@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\PaypalGraphQl\Model\Resolver\Customer;
 
-use Magento\Integration\Api\CustomerTokenServiceInterface;
 use Magento\PaypalGraphQl\PaypalPayflowProAbstractTest;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Quote\Model\QuoteIdToMaskedQuoteId;
@@ -129,9 +128,9 @@ mutation {
 }
 QUERY;
 
-        /** @var CustomerTokenServiceInterface $tokenService */
-        $tokenService = $this->objectManager->get(CustomerTokenServiceInterface::class);
-        $customerToken = $tokenService->createCustomerAccessToken('customer@example.com', 'password');
+        /** @var \Magento\Integration\Model\Oauth\Token $tokenModel */
+        $tokenModel = $this->objectManager->create(\Magento\Integration\Model\Oauth\Token::class);
+        $customerToken = $tokenModel->createCustomerToken(1)->getToken();
 
         $requestHeaders = [
             'Content-Type' => 'application/json',
@@ -149,9 +148,14 @@ QUERY;
         );
 
         $this->gatewayMock
+            ->expects($this->at(0))
             ->method('postRequest')
-            ->willReturnOnConsecutiveCalls(
-                $paypalResponse,
+            ->willReturn($paypalResponse);
+
+        $this->gatewayMock
+            ->expects($this->at(1))
+            ->method('postRequest')
+            ->willReturn(
                 new DataObject(
                     [
                         'result' => '0',
@@ -171,10 +175,11 @@ QUERY;
                         'expdate' => '0221',
                         'cardtype' => '0',
                         'iavs' => 'N',
-                        'result_code' => '0'
+                        'result_code' => '0',
                     ]
                 )
             );
+
         $response = $this->graphQlRequest->send($query, [], '', $requestHeaders);
         $responseData = $this->json->unserialize($response->getContent());
 

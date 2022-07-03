@@ -51,7 +51,7 @@ class YtdStartTest extends AbstractBackendController
                 $regEx .= 'selected\=\"selected\"[^\>]*?';
             }
             $regEx .= "\>$monthNumber\<\/option\>";
-            $this->assertMatchesRegularExpression("#$regEx#", $content);
+            $this->assertRegExp("#$regEx#", $content);
         }
     }
 }

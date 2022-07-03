@@ -71,7 +71,7 @@ class ConfirmCustomerByTokenTest extends TestCase
         //make city address invalid
         $this->makeCityInvalid($id);
 
-        $this->confirmCustomerByToken->resetCustomerConfirmation($id);
+        $this->confirmCustomerByToken->execute(self::STUB_CUSTOMER_RESET_TOKEN);
         $this->assertNull($customerModel->load($id)->getConfirmation());
     }
 

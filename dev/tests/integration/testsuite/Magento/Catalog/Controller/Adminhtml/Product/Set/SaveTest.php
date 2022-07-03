@@ -164,7 +164,6 @@ class SaveTest extends AbstractBackendController
             [
                 'gotoEdit' => '1',
                 'skeleton_set' => $this->getCatalogProductDefaultAttributeSetId(),
-                'attribute_set_name' => ''
             ]
         );
         $this->dispatch('backend/catalog/product_set/save/');

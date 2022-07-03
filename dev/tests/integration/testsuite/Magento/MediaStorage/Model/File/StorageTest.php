@@ -6,7 +6,6 @@
 namespace Magento\MediaStorage\Model\File;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Filesystem\Driver\File;
 
 class StorageTest extends \PHPUnit\Framework\TestCase
 {
@@ -28,11 +27,10 @@ class StorageTest extends \PHPUnit\Framework\TestCase
         $filesystem = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
             \Magento\Framework\Filesystem::class
         );
-
-        $mediaDirectory = $filesystem->getDirectoryWrite(DirectoryList::MEDIA);
-        if ($mediaDirectory->getDriver() instanceof File) {
-            $this->assertEquals($config['media_directory'], $mediaDirectory->getAbsolutePath());
-        }
+        $this->assertEquals(
+            $filesystem->getDirectoryRead(DirectoryList::MEDIA)->getAbsolutePath(),
+            $config['media_directory']
+        );
         $this->assertIsArray($config['allowed_resources']);
         $this->assertContains('css', $config['allowed_resources']);
         $this->assertContains('css_secure', $config['allowed_resources']);

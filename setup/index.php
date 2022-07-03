@@ -3,11 +3,8 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-
-use Laminas\Http\PhpEnvironment\Request;
-use Magento\Framework\App\Bootstrap;
-use Magento\Framework\App\ProductMetadata;
-use Magento\Setup\Model\License;
+use Magento\Setup\Application;
+use Magento\Setup\Model\ObjectManagerProvider;
 
 if (PHP_SAPI == 'cli') {
     echo "You cannot run this from the command line." . PHP_EOL .
@@ -33,20 +30,10 @@ HTML;
 $handler = new \Magento\Framework\App\ErrorHandler();
 set_error_handler([$handler, 'handler']);
 
-// Render Setup Wizard landing page
-$objectManager = Bootstrap::create(BP, $_SERVER)->getObjectManager();
-
-$licenseClass = $objectManager->create(License::class);
-$metaClass = $objectManager->create(ProductMetadata::class);
-/** @var License $license */
-$license = $licenseClass->getContents();
-/** @var ProductMetadata $version */
-$version = $metaClass->getVersion();
-
-$request = new Request();
-$basePath = $request->getBasePath();
-
-ob_start();
-require_once __DIR__ . '/view/magento/setup/index.phtml';
-$html = ob_get_clean();
-echo $html;
+$configuration = require __DIR__ . '/config/application.config.php';
+$bootstrap = new Application();
+$application = $bootstrap->bootstrap($configuration);
+$application->getServiceManager()
+    ->get(ObjectManagerProvider::class)
+    ->setObjectManager(\Magento\Framework\App\Bootstrap::create(BP, $_SERVER)->getObjectManager());
+$application->run();

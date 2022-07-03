@@ -315,8 +315,8 @@ class HelperTest extends TestCase
                 foreach ($roles as $role) {
                     $this->assertEquals($image, $simpleProduct->getData($role));
                 }
-                $this->assertTrue(
-                    $this->mediaDirectory->isExist($this->config->getBaseMediaPath() . $image)
+                $this->assertFileExists(
+                    $this->mediaDirectory->getAbsolutePath($this->config->getBaseMediaPath() . $image)
                 );
             }
         }

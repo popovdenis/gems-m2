@@ -83,10 +83,7 @@ try {
     $application->createInstallDir();
     //We do not want to install anything
     $application->initialize([]);
-
-    if ($settings->getAsBoolean('TESTS_CLEANUP')) {
-        $application->cleanup();
-    }
+    $application->cleanup();
 
     \Magento\TestFramework\Helper\Bootstrap::setInstance(new \Magento\TestFramework\Helper\Bootstrap($bootstrap));
 

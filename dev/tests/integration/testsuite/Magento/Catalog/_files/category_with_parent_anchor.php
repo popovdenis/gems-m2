@@ -27,18 +27,15 @@ $parentCategoryData = [
     'is_anchor' => true,
 ];
 $parentCategory->setData($parentCategoryData);
-$parentCategory = $categoryRepository->save($parentCategory);
+$parentCategoryId = $categoryRepository->save($parentCategory)->getId();
 
 $category = $categoryFactory->create();
 $category->isObjectNew(true);
 $categoryData = [
     'name' => 'Child category',
     'attribute_set_id' => $attributeSetId,
-    'parent_id' => $parentCategory->getId(),
+    'parent_id' => $parentCategoryId,
     'is_active' => true,
 ];
 $category->setData($categoryData);
 $categoryRepository->save($category);
-
-//save parent category to set "children" attribute
-$categoryRepository->save($parentCategory);

@@ -5,22 +5,20 @@
  */
 namespace Magento\TestModuleDefaultHydrator\Api\Data;
 
-/**
- * @api
- */
 interface ExtensionAttributeInterface
 {
     /**#@+
      * Constants for keys of data array. Identical to the name of the getter in snake case
      */
-    public const ID = 'id';
-    public const CUSTOMER_ID = 'customer_id';
-    public const VALUE = 'value';
+    const ID = 'id';
+    const CUSTOMER_ID = 'customer_id';
+    const VALUE = 'value';
     /**#@-*/
 
     /**
      * Get ID
      *
+     * @api
      * @return int|null
      */
     public function getId();
@@ -28,6 +26,7 @@ interface ExtensionAttributeInterface
     /**
      * Set ID
      *
+     * @api
      * @param int $id
      * @return $this
      */
@@ -36,6 +35,7 @@ interface ExtensionAttributeInterface
     /**
      * Get customer ID
      *
+     * @api
      * @return int|null
      */
     public function getCustomerId();
@@ -43,6 +43,7 @@ interface ExtensionAttributeInterface
     /**
      * Set customer ID
      *
+     * @api
      * @param int $customerId
      * @return $this
      */
@@ -51,6 +52,7 @@ interface ExtensionAttributeInterface
     /**
      * Get value
      *
+     * @api
      * @return string|null
      */
     public function getValue();
@@ -58,6 +60,7 @@ interface ExtensionAttributeInterface
     /**
      * Set value
      *
+     * @api
      * @param string $value
      * @return $this
      */

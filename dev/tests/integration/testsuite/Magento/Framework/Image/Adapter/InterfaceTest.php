@@ -5,11 +5,7 @@
  */
 namespace Magento\Framework\Image\Adapter;
 
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Filesystem\Directory\WriteInterface;
-
 /**
- * @magentoDataFixture Magento/Framework/Image/_files/image_fixture.php
  * @magentoAppIsolation enabled
  */
 class InterfaceTest extends \PHPUnit\Framework\TestCase
@@ -23,19 +19,6 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
         \Magento\Framework\Image\Adapter\AdapterInterface::ADAPTER_GD2,
         \Magento\Framework\Image\Adapter\AdapterInterface::ADAPTER_IM,
     ];
-
-    /**
-     * @var \Magento\Framework\ObjectManagerInterface
-     */
-    private $objectManager;
-
-    /**
-     * @inheritdoc
-     */
-    protected function setUp(): void
-    {
-        $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-    }
 
     /**
      * Add adapters to each data provider case
@@ -63,7 +46,7 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
      */
     protected function _getFixtureImageSize()
     {
-        return [311, 175];
+        return [311, 162];
     }
 
     /**
@@ -96,14 +79,14 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
      */
     protected function _getFixture($pattern)
     {
-        if (!$pattern) {
-            return null;
+        $dir = dirname(__DIR__) . '/_files/';
+        $data = glob($dir . $pattern);
+
+        if (!empty($data)) {
+            return $data[0];
         }
-        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        /** @var $rootDirectory \Magento\Framework\Filesystem\Directory\WriteInterface */
-        $rootDirectory = $objectManager->get(\Magento\Framework\Filesystem\Directory\TargetDirectory::class)
-            ->getDirectoryWrite(DirectoryList::TMP);
-        return $rootDirectory->getAbsolutePath('image/test/' . $pattern);
+
+        return null;
     }
 
     /**
@@ -115,13 +98,9 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
      */
     protected function _isFormatSupported($image, $adapter)
     {
-        if ($image === null || !file_exists($image)) {
-            return false;
-        }
         $data = pathinfo($image);
         $supportedTypes = $adapter->getSupportedFormats();
-
-        return isset($data['extension']) && in_array(strtolower($data['extension']), $supportedTypes);
+        return $image && file_exists($image) && in_array(strtolower($data['extension']), $supportedTypes);
     }
 
     /**
@@ -135,7 +114,8 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
     {
         $adapter = null;
         try {
-            $adapter = $this->objectManager->get(\Magento\Framework\Image\AdapterFactory::class)->create($adapterType);
+            $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+            $adapter = $objectManager->get(\Magento\Framework\Image\AdapterFactory::class)->create($adapterType);
         } catch (\Exception $e) {
             $this->markTestSkipped($e->getMessage());
         }
@@ -226,36 +206,29 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @param string $image
-     * @param array $tmpDir (dirName, newName)
+     * @param array $tempPath (dirName, newName)
      * @param string $adapterType
-     *
-     * @throws \Magento\Framework\Exception\FileSystemException
      *
      * @dataProvider saveDataProvider
      * @depends testOpen
      */
-    public function testSave($image, $tmpDir, $adapterType)
+    public function testSave($image, $tempPath, $adapterType)
     {
         $adapter = $this->_getAdapter($adapterType);
         $adapter->open($image);
-
-        /** @var $rootDirectory \Magento\Framework\Filesystem\Directory\WriteInterface */
-        $rootDirectory = $this->objectManager->get(\Magento\Framework\Filesystem\Directory\TargetDirectory::class)
-            ->getDirectoryWrite(DirectoryList::TMP);
-
-        call_user_func_array([$adapter, 'save'], $tmpDir);
-        $tmpDir = join('', $tmpDir);
-        $this->assertTrue($rootDirectory->isExist($tmpDir));
-        $rootDirectory->delete($tmpDir);
+        try {
+            call_user_func_array([$adapter, 'save'], $tempPath);
+            $tempPath = join('', $tempPath);
+            $this->assertFileExists($tempPath);
+            unlink($tempPath);
+        } catch (\Exception $e) {
+            $this->assertFalse(is_dir($tempPath[0]) && is_writable($tempPath[0]));
+        }
     }
 
     public function saveDataProvider()
     {
-        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        /** @var $rootDirectory \Magento\Framework\Filesystem\Directory\WriteInterface */
-        $rootDirectory = $objectManager->get(\Magento\Framework\Filesystem\Directory\TargetDirectory::class)
-            ->getDirectoryWrite(DirectoryList::TMP);
-        $dir = $rootDirectory->getAbsolutePath('image/');
+        $dir = \Magento\TestFramework\Helper\Bootstrap::getInstance()->getAppTempDir() . '/';
         return $this->_prepareData(
             [
                 [$this->_getFixture('image_adapters_test.png'), [$dir . uniqid('test_image_adapter')]],
@@ -595,7 +568,7 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
                 break;
             case \Magento\Framework\Image\Adapter\AbstractAdapter::POSITION_TOP_LEFT:
                 $pixel['x'] = 1;
-                $pixel['y'] = 10;
+                $pixel['y'] = 1;
                 break;
             case \Magento\Framework\Image\Adapter\AbstractAdapter::POSITION_TOP_RIGHT:
                 $pixel['x'] = $adapter->getOriginalWidth() - 1;
@@ -667,7 +640,9 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
         $adapter = $this->_getAdapter($adapterType);
 
         /** @var \Magento\Framework\Filesystem\Directory\ReadFactory readFactory */
-        $readFactory = $this->objectManager->get(\Magento\Framework\Filesystem\Directory\ReadFactory::class);
+        $readFactory = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+            \Magento\Framework\Filesystem\Directory\ReadFactory::class
+        );
         $reader = $readFactory->create(BP);
         $path = $reader->getAbsolutePath('lib/internal/LinLibertineFont/LinLibertine_Re-4.4.1.ttf');
         $adapter->createPngFromString('T', $path);
@@ -723,7 +698,8 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateUploadFile()
     {
-        $imageAdapter = $this->objectManager->get(\Magento\Framework\Image\AdapterFactory::class)->create();
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+        $imageAdapter = $objectManager->get(\Magento\Framework\Image\AdapterFactory::class)->create();
         $this->assertTrue($imageAdapter->validateUploadFile($this->_getFixture('magento_thumbnail.jpg')));
     }
 
@@ -737,7 +713,8 @@ class InterfaceTest extends \PHPUnit\Framework\TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $imageAdapter = $this->objectManager->get(\Magento\Framework\Image\AdapterFactory::class)->create();
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+        $imageAdapter = $objectManager->get(\Magento\Framework\Image\AdapterFactory::class)->create();
         $filePath = $useFixture ? $this->_getFixture($fileName) : $fileName;
 
         try {

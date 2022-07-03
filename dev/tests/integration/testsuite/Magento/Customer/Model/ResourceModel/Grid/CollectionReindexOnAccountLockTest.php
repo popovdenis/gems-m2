@@ -12,6 +12,7 @@ use Magento\Framework\Exception\InvalidEmailOrPasswordException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\Indexer\TestCase;
+use Magento\Tests\NamingConvention\true\mixed;
 
 /**
  * Test if customer account lock on too many failed authentication attempts triggers customer grid reindex
@@ -38,7 +39,7 @@ class CollectionReindexOnAccountLockTest extends TestCase
     }
 
     /**
-     * @return string|null
+     * @return mixed
      * @throws NoSuchEntityException
      */
     private function getCustomerLockExpire(): ?string
@@ -52,7 +53,7 @@ class CollectionReindexOnAccountLockTest extends TestCase
     }
 
     /**
-     * @return string|null
+     * @return mixed
      */
     private function getCustomerGridLockExpire(): ?string
     {

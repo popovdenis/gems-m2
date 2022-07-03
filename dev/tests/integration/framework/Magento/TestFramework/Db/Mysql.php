@@ -47,12 +47,7 @@ class Mysql extends \Magento\TestFramework\Db\AbstractDb
     /**
      * @var bool
      */
-    private $isMysqldumpVersion8;
-
-    /**
-     * @var bool
-     */
-    private $isUsingAuroraDb;
+    private $mysqlDumpVersionIs8;
 
     /**
      * {@inheritdoc}
@@ -121,21 +116,17 @@ class Mysql extends \Magento\TestFramework\Db\AbstractDb
     public function storeDbDump()
     {
         $this->ensureDefaultsExtraFile();
-        $additionalArguments = [];
+        $additionalArguments = '';
 
         if ($this->isMysqlDumpVersion8()) {
-            $additionalArguments[] = '--column-statistics=0';
-        }
-
-        if ($this->isUsingAuroraDb()) {
-            $additionalArguments[] = '--set-gtid-purged=OFF';
+            $additionalArguments = '--column-statistics=0';
         }
 
         $format = sprintf(
             '%s %s %s %s',
             'mysqldump --defaults-file=%s --host=%s --port=%s',
             '--no-tablespaces',
-            implode(' ', $additionalArguments),
+            $additionalArguments,
             '%s > %s'
         );
 
@@ -203,42 +194,14 @@ class Mysql extends \Magento\TestFramework\Db\AbstractDb
      */
     private function isMysqlDumpVersion8(): bool
     {
-        if (!$this->isMysqldumpVersion8) {
+        if (!$this->mysqlDumpVersionIs8) {
             $version = $this->_shell->execute(
                 'mysqldump --version'
             );
 
-            $this->isMysqldumpVersion8 = (bool) preg_match('/8\.0\./', $version);
+            $this->mysqlDumpVersionIs8 = (bool) preg_match('/8\.0\./', $version);
         }
 
-        return $this->isMysqldumpVersion8;
-    }
-
-    /**
-     * Is the DB connection Aurora RDS?
-     *
-     * @return bool
-     */
-    private function isUsingAuroraDb(): bool
-    {
-        if (!isset($this->isUsingAuroraDb)) {
-            try {
-                $this->_shell->execute(
-                    'mysql --defaults-file=%s --host=%s --port=%s %s --execute="SELECT AURORA_VERSION()"',
-                    [
-                        $this->_defaultsExtraFile,
-                        $this->_host,
-                        $this->_port,
-                        $this->_schema
-                    ]
-                );
-
-                $this->isUsingAuroraDb = true;
-            } catch (LocalizedException $e) {
-                $this->isUsingAuroraDb = false;
-            }
-        }
-
-        return $this->isUsingAuroraDb;
+        return $this->mysqlDumpVersionIs8;
     }
 }

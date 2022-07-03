@@ -3,4 +3,4 @@
 /framework/tests/unit/var/allure-results/
 /report/
 /tmp/
-allure-results/
+/var/allure-results/

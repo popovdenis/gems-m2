@@ -6,52 +6,73 @@
 namespace Magento\TestFramework\Integrity\Library;
 
 use Laminas\Code\Reflection\ClassReflection;
-use Magento\Framework\GetParameterClassTrait;
+use Laminas\Code\Reflection\FileReflection;
+use Laminas\Code\Reflection\ParameterReflection;
+use ReflectionClass;
 use ReflectionException;
+use ReflectionParameter;
 
 /**
  * Provide dependencies for the file
  */
 class Injectable
 {
-    use GetParameterClassTrait;
-
     /**
-     * @var string[]
+     * @var \ReflectionException[]
      */
     protected $dependencies = [];
 
     /**
      * Get dependencies
      *
-     * @param ClassReflection $class
-     *
-     * @return string[]
-     * @throws ReflectionException
+     * @param FileReflection $fileReflection
+     * @return \ReflectionException[]
+     * @throws \ReflectionException
      */
-    public function getDependencies(ClassReflection $class): array
+    public function getDependencies(FileReflection $fileReflection)
     {
-        foreach ($class->getMethods() as $method) {
-            if ($method->getDeclaringClass()->getName() !== $class->getName()) {
-                continue;
-            }
+        foreach ($fileReflection->getClasses() as $class) {
+            /** @var ClassReflection $class */
+            foreach ($class->getMethods() as $method) {
+                /** @var \Laminas\Code\Reflection\MethodReflection $method */
+                if ($method->getDeclaringClass()->getName() != $class->getName()) {
+                    continue;
+                }
 
-            foreach ($method->getParameters() as $parameter) {
-                try {
-                    $dependency = $this->getParameterClass($parameter);
-                    if ($dependency !== null) {
-                        $this->dependencies[] = $dependency->getName();
-                    }
-                } catch (ReflectionException $e) {
-                    if (preg_match('#^Class ([A-Za-z0-9_\"\\\\]+) does not exist$#', $e->getMessage(), $result)) {
-                        $this->dependencies[] = trim($result[1], '"');
-                    } else {
-                        throw $e;
+                foreach ($method->getParameters() as $parameter) {
+                    try {
+                        /** @var ParameterReflection $parameter */
+                        $dependency = $this->getParameterClass($parameter);
+                        if ($dependency instanceof ClassReflection) {
+                            $this->dependencies[] = $dependency->getName();
+                        }
+                    } catch (\ReflectionException $e) {
+                        if (preg_match('#^Class ([A-Za-z0-9_\\\\]+) does not exist$#', $e->getMessage(), $result)) {
+                            $this->dependencies[] = $result[1];
+                        } else {
+                            throw $e;
+                        }
                     }
                 }
             }
         }
 
         return $this->dependencies;
+    }
+
+    /**
+     * Get class by reflection parameter
+     *
+     * @param ReflectionParameter $reflectionParameter
+     * @return ReflectionClass|null
+     * @throws ReflectionException
+     */
+    private function getParameterClass(ReflectionParameter $reflectionParameter): ?ReflectionClass
+    {
+        $parameterType = $reflectionParameter->getType();
+
+        return $parameterType && !$parameterType->isBuiltin()
+            ? new ReflectionClass($parameterType->getName())
+            : null;
     }
 }

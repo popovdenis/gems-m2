@@ -11,7 +11,6 @@ namespace Magento\Cms\Model\Wysiwyg\Images;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Cms\Helper\Wysiwyg\Images as ImagesHelper;
 use Magento\Framework\Url\EncoderInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
@@ -52,28 +51,25 @@ class GetInsertImageContentTest extends TestCase
      * Test for GetInsertImageContent::execute
      *
      * @dataProvider imageDataProvider
-     * @magentoDataFixture Magento/Store/_files/core_fixturestore.php
      * @param string $filename
      * @param bool $forceStaticPath
      * @param bool $renderAsTag
-     * @param string|null $storeCode
+     * @param int|null $storeId
      * @param string $expectedResult
      */
     public function testExecute(
         string $filename,
         bool $forceStaticPath,
         bool $renderAsTag,
-        ?string $storeCode,
+        ?int $storeId,
         string $expectedResult
     ): void {
-        $storeManager = Bootstrap::getObjectManager()->get(StoreManagerInterface::class);
-        $storeId = $storeCode ? (int)$storeManager->getStore($storeCode)->getId() : null;
         if (!$forceStaticPath && !$renderAsTag && !$this->imagesHelper->isUsingStaticUrlsAllowed()) {
             $expectedResult = $this->url->getUrl(
                 'cms/wysiwyg/directive',
                 [
                     '___directive' => $this->urlEncoder->encode($expectedResult),
-                    '_escape_params' => false,
+                    '_escape_params' => false
                 ]
             );
         }
@@ -101,36 +97,36 @@ class GetInsertImageContentTest extends TestCase
                 'test-image.jpg',
                 false,
                 true,
-                'default',
-                '<img src="{{media url=&quot;test-image.jpg&quot;}}" alt="" />',
+                1,
+                '<img src="{{media url=&quot;test-image.jpg&quot;}}" alt="" />'
             ],
             [
                 'catalog/category/test-image.jpg',
                 true,
                 false,
-                'default',
-                '/media/catalog/category/test-image.jpg',
+                1,
+                '/media/catalog/category/test-image.jpg'
             ],
             [
                 'test-image.jpg',
                 false,
                 false,
-                'default',
-                '{{media url="test-image.jpg"}}',
+                1,
+                '{{media url="test-image.jpg"}}'
             ],
             [
                 '/test-image.jpg',
                 false,
                 true,
-                'fixturestore',
-                '<img src="{{media url=&quot;/test-image.jpg&quot;}}" alt="" />',
+                2,
+                '<img src="{{media url=&quot;/test-image.jpg&quot;}}" alt="" />'
             ],
             [
                 'test-image.jpg',
                 false,
                 true,
                 null,
-                '<img src="{{media url=&quot;test-image.jpg&quot;}}" alt="" />',
+                '<img src="{{media url=&quot;test-image.jpg&quot;}}" alt="" />'
             ],
         ];
     }

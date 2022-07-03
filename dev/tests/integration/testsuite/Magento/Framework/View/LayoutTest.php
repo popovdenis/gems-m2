@@ -3,7 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
 
 /**
  * Layout integration tests
@@ -14,52 +13,35 @@ declare(strict_types=1);
  */
 namespace Magento\Framework\View;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\View\Element\Messages;
-use Magento\Framework\View\Element\Template;
-use Magento\Framework\View\Element\Text;
-use Magento\Framework\View\Element\Text\ListText;
-use Magento\Framework\View\Layout\Data\Structure;
-use Magento\Framework\View\Layout\Element;
-use Magento\Framework\View\Layout\ProcessorInterface;
-use Magento\TestFramework\Helper\Bootstrap;
-use PHPUnit\Framework\TestCase;
-
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class LayoutTest extends TestCase
+class LayoutTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var Layout
+     * @var \Magento\Framework\View\Layout
      */
-    private $layout;
+    protected $_layout;
 
     /**
-     * @var LayoutFactory
+     * @var \Magento\Framework\View\LayoutFactory
      */
-    private $layoutFactory;
+    protected $layoutFactory;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
-        $objectManager = Bootstrap::getObjectManager();
-        $this->layoutFactory = $objectManager->get(LayoutFactory::class);
-        $this->layout = $this->layoutFactory->create();
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+        $this->layoutFactory = $objectManager->get(\Magento\Framework\View\LayoutFactory::class);
+        $this->_layout = $this->layoutFactory->create();
         $objectManager->get(\Magento\Framework\App\Cache\Type\Layout::class)->clean();
     }
 
-    /**
-     * @return void
-     */
-    public function testConstructorStructure(): void
+    public function testConstructorStructure()
     {
-        $objectManager = Bootstrap::getObjectManager();
-        $structure = $objectManager->get(Structure::class);
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+        $structure = $objectManager->get(\Magento\Framework\View\Layout\Data\Structure::class);
         $structure->createElement('test.container', []);
-        /** @var $layout LayoutInterface */
+        /** @var $layout \Magento\Framework\View\LayoutInterface */
         $layout = $this->layoutFactory->create(['structure' => $structure]);
         $this->assertTrue($layout->hasElement('test.container'));
     }
@@ -67,53 +49,42 @@ class LayoutTest extends TestCase
     /**
      * @magentoAppIsolation enabled
      * @magentoAppArea frontend
-     *
-     * @return void
      */
-    public function testDestructor(): void
+    public function testDestructor()
     {
-        $this->layout->addBlock(Text::class, 'test');
-        $this->assertNotEmpty($this->layout->getAllBlocks());
-        $this->layout->__destruct();
-        $this->assertEmpty($this->layout->getAllBlocks());
+        $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'test');
+        $this->assertNotEmpty($this->_layout->getAllBlocks());
+        $this->_layout->__destruct();
+        $this->assertEmpty($this->_layout->getAllBlocks());
     }
 
-    /**
-     * @return void
-     */
-    public function testGetUpdate(): void
+    public function testGetUpdate()
     {
-        $this->assertInstanceOf(ProcessorInterface::class, $this->layout->getUpdate());
+        $this->assertInstanceOf(\Magento\Framework\View\Layout\ProcessorInterface::class, $this->_layout->getUpdate());
     }
 
-    /**
-     * @return void
-     */
-    public function testGenerateXml(): void
+    public function testGenerateXml()
     {
         $layoutUtility = new Utility\Layout($this);
-        /** @var $layout LayoutInterface */
-        $layout = $this->getMockBuilder(Layout::class)
-            ->onlyMethods(['getUpdate'])
+        /** @var $layout \Magento\Framework\View\LayoutInterface */
+        $layout = $this->getMockBuilder(\Magento\Framework\View\Layout::class)
+            ->setMethods(['getUpdate'])
             ->setConstructorArgs($layoutUtility->getLayoutDependencies())
             ->getMock();
 
-        $merge = $this->getMockBuilder(\StdClass::class)
-            ->disableOriginalConstructor()
-            ->disableOriginalClone()
-            ->disableArgumentCloning()
-            ->disallowMockingUnknownTypes()
-            ->addMethods(['asSimplexml'])
-            ->getMock();
-
-        $merge->expects($this->once())
-            ->method('asSimplexml')
-            ->willReturn(
+        $merge = $this->createPartialMock(\StdClass::class, ['asSimplexml']);
+        $merge->expects(
+            $this->once()
+        )->method(
+            'asSimplexml'
+        )->willReturn(
+            
                 simplexml_load_string(
                     '<layout><container name="container1"></container></layout>',
-                    Element::class
+                    \Magento\Framework\View\Layout\Element::class
                 )
-            );
+            
+        );
         $layout->expects($this->once())->method('getUpdate')->willReturn($merge);
         $this->assertEmpty($layout->getXpath('/layout/container[@name="container1"]'));
         $layout->generateXml();
@@ -121,17 +92,15 @@ class LayoutTest extends TestCase
     }
 
     /**
-     * A smoke test for generating elements.
+     * A smoke test for generating elements
      *
      * See sophisticated tests at \Magento\Framework\View\LayoutDirectivesTest
      * @see \Magento\Framework\View\LayoutDirectivesTest
      * @magentoAppIsolation enabled
-     *
-     * @return void
      */
-    public function testGenerateGetAllBlocks(): void
+    public function testGenerateGetAllBlocks()
     {
-        $this->layout->setXml(
+        $this->_layout->setXml(
             simplexml_load_string(
                 '<layout>
                 <block class="Magento\Framework\View\Element\Text" name="block1">
@@ -140,172 +109,149 @@ class LayoutTest extends TestCase
                 <block class="Magento\Framework\View\Element\Text" template="test" ttl="360"/>
                 <block class="Magento\Framework\View\Element\Text"/>
             </layout>',
-                Element::class
+                \Magento\Framework\View\Layout\Element::class
             )
         );
-        $this->assertEquals([], $this->layout->getAllBlocks());
-        $this->layout->generateElements();
+        $this->assertEquals([], $this->_layout->getAllBlocks());
+        $this->_layout->generateElements();
         $expected = ['block1', 'block1_schedule_block0', 'schedule_block1', 'schedule_block2'];
-        $this->assertSame($expected, array_keys($this->layout->getAllBlocks()));
-        $child = $this->layout->getBlock('block1_schedule_block0');
-        $this->assertSame($this->layout->getBlock('block1'), $child->getParentBlock());
-        $this->assertEquals('test', $this->layout->getBlock('schedule_block1')->getData('template'));
-        $this->assertEquals('360', $this->layout->getBlock('schedule_block1')->getData('ttl'));
-        $this->assertFalse($this->layout->getBlock('nonexisting'));
+        $this->assertSame($expected, array_keys($this->_layout->getAllBlocks()));
+        $child = $this->_layout->getBlock('block1_schedule_block0');
+        $this->assertSame($this->_layout->getBlock('block1'), $child->getParentBlock());
+        $this->assertEquals('test', $this->_layout->getBlock('schedule_block1')->getData('template'));
+        $this->assertEquals('360', $this->_layout->getBlock('schedule_block1')->getData('ttl'));
+        $this->assertFalse($this->_layout->getBlock('nonexisting'));
     }
 
-    /**
-     * @return void
-     */
-    public function testGetElementProperty(): void
+    public function testGetElementProperty()
     {
         $name = 'test';
-        $this->layout->addContainer($name, 'Test', ['option1' => 1, 'option2' => 2]);
+        $this->_layout->addContainer($name, 'Test', ['option1' => 1, 'option2' => 2]);
         $this->assertEquals(
             'Test',
-            $this->layout->getElementProperty($name, Element::CONTAINER_OPT_LABEL)
+            $this->_layout->getElementProperty($name, \Magento\Framework\View\Layout\Element::CONTAINER_OPT_LABEL)
         );
         $this->assertEquals(
-            Element::TYPE_CONTAINER,
-            $this->layout->getElementProperty($name, 'type')
+            \Magento\Framework\View\Layout\Element::TYPE_CONTAINER,
+            $this->_layout->getElementProperty($name, 'type')
         );
-        $this->assertSame(2, $this->layout->getElementProperty($name, 'option2'));
+        $this->assertSame(2, $this->_layout->getElementProperty($name, 'option2'));
 
-        $this->layout->addBlock(Text::class, 'text', $name);
+        $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'text', $name);
         $this->assertEquals(
-            Element::TYPE_BLOCK,
-            $this->layout->getElementProperty('text', 'type')
+            \Magento\Framework\View\Layout\Element::TYPE_BLOCK,
+            $this->_layout->getElementProperty('text', 'type')
         );
         $this->assertSame(
             ['text' => 'text'],
-            $this->layout->getElementProperty($name, \Magento\Framework\Data\Structure::CHILDREN)
+            $this->_layout->getElementProperty($name, \Magento\Framework\Data\Structure::CHILDREN)
         );
     }
 
     /**
      * @magentoAppIsolation enabled
-     *
-     * @return void
      */
-    public function testIsBlock(): void
+    public function testIsBlock()
     {
-        $this->assertFalse($this->layout->isBlock('container'));
-        $this->assertFalse($this->layout->isBlock('block'));
-        $this->layout->addContainer('container', 'Container');
-        $this->layout->addBlock(Text::class, 'block');
-        $this->assertFalse($this->layout->isBlock('container'));
-        $this->assertTrue($this->layout->isBlock('block'));
+        $this->assertFalse($this->_layout->isBlock('container'));
+        $this->assertFalse($this->_layout->isBlock('block'));
+        $this->_layout->addContainer('container', 'Container');
+        $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'block');
+        $this->assertFalse($this->_layout->isBlock('container'));
+        $this->assertTrue($this->_layout->isBlock('block'));
     }
 
-    /**
-     * @return void
-     */
-    public function testSetUnsetBlock(): void
+    public function testSetUnsetBlock()
     {
         $expectedBlockName = 'block_' . __METHOD__;
-        $expectedBlock = $this->layout->createBlock(Text::class);
+        $expectedBlock = $this->_layout->createBlock(\Magento\Framework\View\Element\Text::class);
 
-        $this->layout->setBlock($expectedBlockName, $expectedBlock);
-        $this->assertSame($expectedBlock, $this->layout->getBlock($expectedBlockName));
+        $this->_layout->setBlock($expectedBlockName, $expectedBlock);
+        $this->assertSame($expectedBlock, $this->_layout->getBlock($expectedBlockName));
 
-        $this->layout->unsetElement($expectedBlockName);
-        $this->assertFalse($this->layout->getBlock($expectedBlockName));
-        $this->assertFalse($this->layout->hasElement($expectedBlockName));
+        $this->_layout->unsetElement($expectedBlockName);
+        $this->assertFalse($this->_layout->getBlock($expectedBlockName));
+        $this->assertFalse($this->_layout->hasElement($expectedBlockName));
     }
 
     /**
-     * @return void
      * @dataProvider createBlockDataProvider
      */
-    public function testCreateBlock($blockType, $blockName, array $blockData, $expectedName): void
+    public function testCreateBlock($blockType, $blockName, array $blockData, $expectedName)
     {
         $expectedData = $blockData + ['type' => $blockType];
 
-        $block = $this->layout->createBlock($blockType, $blockName, ['data' => $blockData]);
+        $block = $this->_layout->createBlock($blockType, $blockName, ['data' => $blockData]);
 
         $this->assertMatchesRegularExpression($expectedName, $block->getNameInLayout());
         $this->assertEquals($expectedData, $block->getData());
     }
 
-    /**
-     * @return array
-     */
-    public function createBlockDataProvider(): array
+    public function createBlockDataProvider()
     {
         return [
-            'named block' => [Template::class,
+            'named block' => [\Magento\Framework\View\Element\Template::class,
                 'some_block_name_full_class',
-                ['type' => Template::class, 'is_anonymous' => false],
+                ['type' => \Magento\Framework\View\Element\Template::class, 'is_anonymous' => false],
                 '/^some_block_name_full_class$/',
             ],
-            'no name block' => [ListText::class,
+            'no name block' => [\Magento\Framework\View\Element\Text\ListText::class,
                 '',
-                ['type' => ListText::class, 'key1' => 'value1'],
+                ['type' => \Magento\Framework\View\Element\Text\ListText::class, 'key1' => 'value1'],
                 '/text\\\\list/',
             ]
         ];
     }
 
     /**
-     * @return void
      * @dataProvider blockNotExistsDataProvider
      */
-    public function testCreateBlockNotExists($name): void
+    public function testCreateBlockNotExists($name)
     {
-        $this->expectException(LocalizedException::class);
+        $this->expectException(\Magento\Framework\Exception\LocalizedException::class);
 
-        $this->layout->createBlock($name);
+        $this->_layout->createBlock($name);
     }
 
-    /**
-     * @return array
-     */
-    public function blockNotExistsDataProvider(): array
+    public function blockNotExistsDataProvider()
     {
         return [[''], ['block_not_exists']];
     }
 
-    /**
-     * @return void
-     */
-    public function testAddBlock(): void
+    public function testAddBlock()
     {
         $this->assertInstanceOf(
-            Text::class,
-            $this->layout->addBlock(Text::class, 'block1')
+            \Magento\Framework\View\Element\Text::class,
+            $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'block1')
         );
-        $block2 = Bootstrap::getObjectManager()->create(
-            Text::class
+        $block2 = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\Framework\View\Element\Text::class
         );
         $block2->setNameInLayout('block2');
-        $this->layout->addBlock($block2, '', 'block1');
+        $this->_layout->addBlock($block2, '', 'block1');
 
-        $this->assertTrue($this->layout->hasElement('block1'));
-        $this->assertTrue($this->layout->hasElement('block2'));
-        $this->assertEquals('block1', $this->layout->getParentName('block2'));
+        $this->assertTrue($this->_layout->hasElement('block1'));
+        $this->assertTrue($this->_layout->hasElement('block2'));
+        $this->assertEquals('block1', $this->_layout->getParentName('block2'));
     }
 
     /**
      * @magentoAppIsolation enabled
-     * @return void
      * @dataProvider addContainerDataProvider()
      */
-    public function testAddContainer($htmlTag): void
+    public function testAddContainer($htmlTag)
     {
-        $this->assertFalse($this->layout->hasElement('container'));
-        $this->layout->addContainer('container', 'Container', ['htmlTag' => $htmlTag]);
-        $this->assertTrue($this->layout->hasElement('container'));
-        $this->assertTrue($this->layout->isContainer('container'));
-        $this->assertEquals($htmlTag, $this->layout->getElementProperty('container', 'htmlTag'));
+        $this->assertFalse($this->_layout->hasElement('container'));
+        $this->_layout->addContainer('container', 'Container', ['htmlTag' => $htmlTag]);
+        $this->assertTrue($this->_layout->hasElement('container'));
+        $this->assertTrue($this->_layout->isContainer('container'));
+        $this->assertEquals($htmlTag, $this->_layout->getElementProperty('container', 'htmlTag'));
 
-        $this->layout->addContainer('container1', 'Container 1', [], 'container', 'c1');
-        $this->assertEquals('container1', $this->layout->getChildName('container', 'c1'));
+        $this->_layout->addContainer('container1', 'Container 1', [], 'container', 'c1');
+        $this->assertEquals('container1', $this->_layout->getChildName('container', 'c1'));
     }
 
-    /**
-     * @return array
-     */
-    public function addContainerDataProvider(): array
+    public function addContainerDataProvider()
     {
         return [
             ['aside'],
@@ -335,57 +281,53 @@ class LayoutTest extends TestCase
 
     /**
      * @magentoAppIsolation enabled
-     * @return void
      */
-    public function testAddContainerInvalidHtmlTag(): void
+    public function testAddContainerInvalidHtmlTag()
     {
         $msg = 'Html tag "span" is forbidden for usage in containers. ' .
             'Consider to use one of the allowed: aside, dd, div, dl, fieldset, main, nav, ' .
             'header, footer, ol, p, section, table, tfoot, ul, article, h1, h2, h3, h4, h5, h6.';
-        $this->expectException(LocalizedException::class);
+        $this->expectException(\Magento\Framework\Exception\LocalizedException::class);
         $this->expectExceptionMessage($msg);
-        $this->layout->addContainer('container', 'Container', ['htmlTag' => 'span']);
+        $this->_layout->addContainer('container', 'Container', ['htmlTag' => 'span']);
     }
 
     /**
      * @magentoAppIsolation enabled
-     * @return void
      */
-    public function testGetChildBlock(): void
+    public function testGetChildBlock()
     {
-        $this->layout->addContainer('parent', 'Parent');
-        $block = $this->layout->addBlock(
-            Text::class,
+        $this->_layout->addContainer('parent', 'Parent');
+        $block = $this->_layout->addBlock(
+            \Magento\Framework\View\Element\Text::class,
             'block',
             'parent',
             'block_alias'
         );
-        $this->layout->addContainer('container', 'Container', [], 'parent', 'container_alias');
-        $this->assertSame($block, $this->layout->getChildBlock('parent', 'block_alias'));
-        $this->assertFalse($this->layout->getChildBlock('parent', 'container_alias'));
+        $this->_layout->addContainer('container', 'Container', [], 'parent', 'container_alias');
+        $this->assertSame($block, $this->_layout->getChildBlock('parent', 'block_alias'));
+        $this->assertFalse($this->_layout->getChildBlock('parent', 'container_alias'));
     }
 
     /**
-     * @return Layout
+     * @return \Magento\Framework\View\Layout
      */
-    public function testSetChild(): Layout
+    public function testSetChild()
     {
-        $this->layout->addContainer('one', 'One');
-        $this->layout->addContainer('two', 'Two');
-        $this->layout->addContainer('three', 'Three');
-        $this->assertSame($this->layout, $this->layout->setChild('one', 'two', ''));
-        $this->layout->setChild('one', 'three', 'three_alias');
-        $this->assertSame(['two', 'three'], $this->layout->getChildNames('one'));
-
-        return $this->layout;
+        $this->_layout->addContainer('one', 'One');
+        $this->_layout->addContainer('two', 'Two');
+        $this->_layout->addContainer('three', 'Three');
+        $this->assertSame($this->_layout, $this->_layout->setChild('one', 'two', ''));
+        $this->_layout->setChild('one', 'three', 'three_alias');
+        $this->assertSame(['two', 'three'], $this->_layout->getChildNames('one'));
+        return $this->_layout;
     }
 
     /**
-     * @param LayoutInterface $layout
+     * @param \Magento\Framework\View\LayoutInterface $layout
      * @depends testSetChild
-     * @return void
      */
-    public function testReorderChild(LayoutInterface $layout): void
+    public function testReorderChild(\Magento\Framework\View\LayoutInterface $layout)
     {
         $layout->addContainer('four', 'Four', [], 'one');
 
@@ -420,208 +362,173 @@ class LayoutTest extends TestCase
 
     /**
      * @magentoAppIsolation enabled
-     * @return void
      */
-    public function testGetChildBlocks(): void
+    public function testGetChildBlocks()
     {
-        $this->layout->addContainer('parent', 'Parent');
-        $block1 = $this->layout->addBlock(Text::class, 'block1', 'parent');
-        $this->layout->addContainer('container', 'Container', [], 'parent');
-        $block2 = $this->layout->addBlock(Template::class, 'block2', 'parent');
-        $this->assertSame(['block1' => $block1, 'block2' => $block2], $this->layout->getChildBlocks('parent'));
+        $this->_layout->addContainer('parent', 'Parent');
+        $block1 = $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'block1', 'parent');
+        $this->_layout->addContainer('container', 'Container', [], 'parent');
+        $block2 = $this->_layout->addBlock(\Magento\Framework\View\Element\Template::class, 'block2', 'parent');
+        $this->assertSame(['block1' => $block1, 'block2' => $block2], $this->_layout->getChildBlocks('parent'));
     }
 
     /**
-     * @return void
      */
-    public function testAddBlockInvalidType(): void
+    public function testAddBlockInvalidType()
     {
-        $this->expectException(LocalizedException::class);
+        $this->expectException(\Magento\Framework\Exception\LocalizedException::class);
 
-        $this->layout->addBlock('invalid_name', 'child');
+        $this->_layout->addBlock('invalid_name', 'child');
     }
 
     /**
      * @magentoAppIsolation enabled
-     *
-     * @return void
      */
-    public function testIsContainer(): void
+    public function testIsContainer()
     {
         $block = 'block';
         $container = 'container';
-        $this->layout->addBlock(Text::class, $block);
-        $this->layout->addContainer($container, 'Container');
-        $this->assertFalse($this->layout->isContainer($block));
-        $this->assertTrue($this->layout->isContainer($container));
-        $this->assertFalse($this->layout->isContainer('invalid_name'));
+        $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, $block);
+        $this->_layout->addContainer($container, 'Container');
+        $this->assertFalse($this->_layout->isContainer($block));
+        $this->assertTrue($this->_layout->isContainer($container));
+        $this->assertFalse($this->_layout->isContainer('invalid_name'));
     }
 
-    /**
-     * @return void
-     */
-    public function testIsManipulationAllowed(): void
+    public function testIsManipulationAllowed()
     {
-        $this->layout->addBlock(Text::class, 'block1');
-        $this->layout->addBlock(Text::class, 'block2', 'block1');
-        $this->assertFalse($this->layout->isManipulationAllowed('block1'));
-        $this->assertFalse($this->layout->isManipulationAllowed('block2'));
+        $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'block1');
+        $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'block2', 'block1');
+        $this->assertFalse($this->_layout->isManipulationAllowed('block1'));
+        $this->assertFalse($this->_layout->isManipulationAllowed('block2'));
 
-        $this->layout->addContainer('container1', 'Container 1');
-        $this->layout->addBlock(Text::class, 'block3', 'container1');
-        $this->layout->addContainer('container2', 'Container 2', [], 'container1');
-        $this->assertFalse($this->layout->isManipulationAllowed('container1'));
-        $this->assertTrue($this->layout->isManipulationAllowed('block3'));
-        $this->assertTrue($this->layout->isManipulationAllowed('container2'));
+        $this->_layout->addContainer('container1', 'Container 1');
+        $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, 'block3', 'container1');
+        $this->_layout->addContainer('container2', 'Container 2', [], 'container1');
+        $this->assertFalse($this->_layout->isManipulationAllowed('container1'));
+        $this->assertTrue($this->_layout->isManipulationAllowed('block3'));
+        $this->assertTrue($this->_layout->isManipulationAllowed('container2'));
     }
 
-    /**
-     * @return void
-     */
-    public function testRenameElement(): void
+    public function testRenameElement()
     {
         $blockName = 'block';
         $expBlockName = 'block_renamed';
         $containerName = 'container';
         $expContainerName = 'container_renamed';
-        $block = $this->layout->createBlock(Text::class, $blockName);
-        $this->layout->addContainer($containerName, 'Container');
+        $block = $this->_layout->createBlock(\Magento\Framework\View\Element\Text::class, $blockName);
+        $this->_layout->addContainer($containerName, 'Container');
 
-        $this->assertEquals($block, $this->layout->getBlock($blockName));
-        $this->layout->renameElement($blockName, $expBlockName);
-        $this->assertEquals($block, $this->layout->getBlock($expBlockName));
+        $this->assertEquals($block, $this->_layout->getBlock($blockName));
+        $this->_layout->renameElement($blockName, $expBlockName);
+        $this->assertEquals($block, $this->_layout->getBlock($expBlockName));
 
-        $this->layout->hasElement($containerName);
-        $this->layout->renameElement($containerName, $expContainerName);
-        $this->layout->hasElement($expContainerName);
+        $this->_layout->hasElement($containerName);
+        $this->_layout->renameElement($containerName, $expContainerName);
+        $this->_layout->hasElement($expContainerName);
     }
 
-    /**
-     * @return void
-     */
-    public function testGetBlock(): void
+    public function testGetBlock()
     {
-        $this->assertFalse($this->layout->getBlock('test'));
-        $block = Bootstrap::getObjectManager()->get(
-            Layout::class
+        $this->assertFalse($this->_layout->getBlock('test'));
+        $block = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+            \Magento\Framework\View\Layout::class
         )->createBlock(
-            Text::class
+            \Magento\Framework\View\Element\Text::class
         );
-        $this->layout->setBlock('test', $block);
-        $this->assertSame($block, $this->layout->getBlock('test'));
+        $this->_layout->setBlock('test', $block);
+        $this->assertSame($block, $this->_layout->getBlock('test'));
     }
 
     /**
      * @magentoAppIsolation enabled
-     *
-     * @return void
      */
-    public function testGetParentName(): void
+    public function testGetParentName()
     {
-        $this->layout->addContainer('one', 'One');
-        $this->layout->addContainer('two', 'Two', [], 'one');
-        $this->assertFalse($this->layout->getParentName('one'));
-        $this->assertEquals('one', $this->layout->getParentName('two'));
+        $this->_layout->addContainer('one', 'One');
+        $this->_layout->addContainer('two', 'Two', [], 'one');
+        $this->assertFalse($this->_layout->getParentName('one'));
+        $this->assertEquals('one', $this->_layout->getParentName('two'));
     }
 
-    /**
-     * @return void
-     */
-    public function testGetElementAlias(): void
+    public function testGetElementAlias()
     {
-        $this->layout->addContainer('one', 'One');
-        $this->layout->addContainer('two', 'One', [], 'one', '1');
-        $this->assertFalse($this->layout->getElementAlias('one'));
-        $this->assertEquals('1', $this->layout->getElementAlias('two'));
+        $this->_layout->addContainer('one', 'One');
+        $this->_layout->addContainer('two', 'One', [], 'one', '1');
+        $this->assertFalse($this->_layout->getElementAlias('one'));
+        $this->assertEquals('1', $this->_layout->getElementAlias('two'));
     }
 
     /**
      * @covers \Magento\Framework\View\Layout::addOutputElement
      * @covers \Magento\Framework\View\Layout::getOutput
      * @covers \Magento\Framework\View\Layout::removeOutputElement
-     *
-     * @return void
      */
-    public function testGetOutput(): void
+    public function testGetOutput()
     {
         $blockName = 'block_' . __METHOD__;
         $expectedText = "some_text_for_{$blockName}";
 
-        $block = $this->layout->addBlock(Text::class, $blockName);
+        $block = $this->_layout->addBlock(\Magento\Framework\View\Element\Text::class, $blockName);
         $block->setText($expectedText);
 
-        $this->layout->addOutputElement($blockName);
+        $this->_layout->addOutputElement($blockName);
         // add the same element twice should not produce output duplicate
-        $this->layout->addOutputElement($blockName);
-        $this->assertEquals($expectedText, $this->layout->getOutput());
+        $this->_layout->addOutputElement($blockName);
+        $this->assertEquals($expectedText, $this->_layout->getOutput());
 
-        $this->layout->removeOutputElement($blockName);
-        $this->assertEmpty($this->layout->getOutput());
+        $this->_layout->removeOutputElement($blockName);
+        $this->assertEmpty($this->_layout->getOutput());
     }
 
-    /**
-     * @return void
-     */
-    public function testGetMessagesBlock(): void
+    public function testGetMessagesBlock()
     {
-        $this->assertInstanceOf(Messages::class, $this->layout->getMessagesBlock());
+        $this->assertInstanceOf(\Magento\Framework\View\Element\Messages::class, $this->_layout->getMessagesBlock());
     }
 
-    /**
-     * @return void
-     */
-    public function testGetBlockSingleton(): void
+    public function testGetBlockSingleton()
     {
-        $block = $this->layout->getBlockSingleton(Text::class);
-        $this->assertInstanceOf(Text::class, $block);
-        $this->assertSame($block, $this->layout->getBlockSingleton(Text::class));
+        $block = $this->_layout->getBlockSingleton(\Magento\Framework\View\Element\Text::class);
+        $this->assertInstanceOf(\Magento\Framework\View\Element\Text::class, $block);
+        $this->assertSame($block, $this->_layout->getBlockSingleton(\Magento\Framework\View\Element\Text::class));
     }
 
-    /**
-     * @return void
-     */
-    public function testUpdateContainerAttributes(): void
+    public function testUpdateContainerAttributes()
     {
-        $this->layout->setXml(
+        $this->_layout->setXml(
             simplexml_load_file(
                 __DIR__ . '/_files/layout/container_attributes.xml',
-                Element::class
+                \Magento\Framework\View\Layout\Element::class
             )
         );
-        $this->layout->generateElements();
-        $result = $this->layout->renderElement('container1', false);
+        $this->_layout->generateElements();
+        $result = $this->_layout->renderElement('container1', false);
         $this->assertEquals('<div id="container1-2" class="class12">Test11Test12</div>', $result);
-        $result = $this->layout->renderElement('container2', false);
+        $result = $this->_layout->renderElement('container2', false);
         $this->assertEquals('<div id="container2-2" class="class22">Test21Test22</div>', $result);
     }
 
-    /**
-     * @return void
-     */
-    public function testIsCacheable(): void
+    public function testIsCacheable()
     {
-        $this->layout->setXml(
+        $this->_layout->setXml(
             simplexml_load_file(
                 __DIR__ . '/_files/layout/cacheable.xml',
-                Element::class
+                \Magento\Framework\View\Layout\Element::class
             )
         );
-        $this->layout->generateElements();
-        $this->assertTrue($this->layout->isCacheable());
+        $this->_layout->generateElements();
+        $this->assertTrue($this->_layout->isCacheable());
     }
 
-    /**
-     * @return void
-     */
-    public function testIsNonCacheable(): void
+    public function testIsNonCacheable()
     {
-        $this->layout->setXml(
+        $this->_layout->setXml(
             simplexml_load_file(
                 __DIR__ . '/_files/layout/non_cacheable.xml',
-                Element::class
+                \Magento\Framework\View\Layout\Element::class
             )
         );
-        $this->layout->generateElements();
-        $this->assertFalse($this->layout->isCacheable());
+        $this->_layout->generateElements();
+        $this->assertFalse($this->_layout->isCacheable());
     }
 }

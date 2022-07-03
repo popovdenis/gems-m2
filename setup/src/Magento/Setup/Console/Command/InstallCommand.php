@@ -33,61 +33,61 @@ class InstallCommand extends AbstractSetupCommand
     /**
      * Parameter indicating command whether to cleanup database in the install routine
      */
-    public const INPUT_KEY_CLEANUP_DB = 'cleanup-database';
+    const INPUT_KEY_CLEANUP_DB = 'cleanup-database';
 
     /**
      * Parameter to specify an order_increment_prefix
      */
-    public const INPUT_KEY_SALES_ORDER_INCREMENT_PREFIX = 'sales-order-increment-prefix';
+    const INPUT_KEY_SALES_ORDER_INCREMENT_PREFIX = 'sales-order-increment-prefix';
 
     /**
      * Parameter indicating command whether to install Sample Data
      */
-    public const INPUT_KEY_USE_SAMPLE_DATA = 'use-sample-data';
+    const INPUT_KEY_USE_SAMPLE_DATA = 'use-sample-data';
 
     /**
      * List of comma-separated module names. That must be enabled during installation.
      * Available magic param all.
      */
-    public const INPUT_KEY_ENABLE_MODULES = 'enable-modules';
+    const INPUT_KEY_ENABLE_MODULES = 'enable-modules';
 
     /**
      * List of comma-separated module names. That must be avoided during installation.
      * List of comma-separated module names. That must be avoided during installation.
      * Available magic param all.
      */
-    public const INPUT_KEY_DISABLE_MODULES = 'disable-modules';
+    const INPUT_KEY_DISABLE_MODULES = 'disable-modules';
 
     /**
      * If this flag is enabled, than all your old scripts with format:
      * InstallSchema, UpgradeSchema will be converted to new db_schema.xml format.
      */
-    public const CONVERT_OLD_SCRIPTS_KEY = 'convert-old-scripts';
+    const CONVERT_OLD_SCRIPTS_KEY = 'convert-old-scripts';
 
     /**
      * Parameter indicating command for interactive setup
      */
-    public const INPUT_KEY_INTERACTIVE_SETUP = 'interactive';
+    const INPUT_KEY_INTERACTIVE_SETUP = 'interactive';
 
     /**
      * Parameter indicating command shortcut for interactive setup
      */
-    public const INPUT_KEY_INTERACTIVE_SETUP_SHORTCUT = 'i';
+    const INPUT_KEY_INTERACTIVE_SETUP_SHORTCUT = 'i';
 
     /**
      * Parameter says that in this mode all destructive operations, like column removal will be dumped
      */
-    public const INPUT_KEY_SAFE_INSTALLER_MODE = 'safe-mode';
+    const INPUT_KEY_SAFE_INSTALLER_MODE = 'safe-mode';
 
     /**
      * Parameter allows to restore data, that was dumped with safe mode before
      */
-    public const INPUT_KEY_DATA_RESTORE = 'data-restore';
+    const INPUT_KEY_DATA_RESTORE = 'data-restore';
 
     /**
      * Regex for sales_order_increment_prefix validation.
      */
-    public const SALES_ORDER_INCREMENT_PREFIX_RULE = '/^.{0,20}$/';
+    const SALES_ORDER_INCREMENT_PREFIX_RULE = '/^.{0,20}$/';
 
     /**
      * Installer service factory
@@ -115,11 +115,6 @@ class InstallCommand extends AbstractSetupCommand
      * @var SearchConfigOptionsList
      */
     protected $searchConfigOptionsList;
-
-    /**
-     * @var array
-     */
-    private $interactiveSetupUserInput;
 
     /**
      * Constructor
@@ -233,9 +228,7 @@ class InstallCommand extends AbstractSetupCommand
     {
         $consoleLogger = new ConsoleLogger($output);
         $installer = $this->installerFactory->create($consoleLogger);
-        $isInteractiveSetup = $input->getOption(self::INPUT_KEY_INTERACTIVE_SETUP) ?? false;
-        $installer->install($isInteractiveSetup ? array_merge($input->getOptions(), $this->interactiveSetupUserInput) :
-            $input->getOptions());
+        $installer->install($input->getOptions());
 
         $importConfigCommand = $this->getApplication()->find(ConfigImportCommand::COMMAND_NAME);
         $arrayInput = new ArrayInput([]);
@@ -267,7 +260,6 @@ class InstallCommand extends AbstractSetupCommand
                 $command .= " --{$key}={$value}";
             }
             $output->writeln("<comment>Try re-running command: php bin/magento setup:install{$command}</comment>");
-            $this->interactiveSetupUserInput = $configOptionsToValidate;
         }
 
         $errors = $this->configModel->validate($configOptionsToValidate);
@@ -364,7 +356,7 @@ class InstallCommand extends AbstractSetupCommand
     /**
      * Runs interactive questions
      *
-     * It will ask users for interactive questions regarding setup configuration.
+     * It will ask users for interactive questionst regarding setup configuration.
      *
      * @param InputInterface $input
      * @param OutputInterface $output
@@ -411,11 +403,14 @@ class InstallCommand extends AbstractSetupCommand
         $question->setValidator(function ($answer) use ($option, $validateInline) {
 
             if ($option instanceof \Magento\Framework\Setup\Option\SelectConfigOption) {
-                //If user doesn't provide an input & default value for question is not set, take first option as input.
-                $answer = $option->getSelectOptions()[$answer] ?? current($option->getSelectOptions());
+                $answer = $option->getSelectOptions()[$answer];
             }
 
-            $answer = $answer === null ? '' : (is_string($answer) ? trim($answer) : $answer);
+            if ($answer == null) {
+                $answer = '';
+            } else {
+                $answer = trim($answer);
+            }
 
             if ($validateInline) {
                 $option->validate($answer);

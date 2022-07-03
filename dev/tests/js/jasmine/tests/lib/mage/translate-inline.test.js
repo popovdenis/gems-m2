@@ -80,7 +80,7 @@ define([
                     },
                     expectedEequestData = 'area=test&test=test',
                     translateInline = $(translateSelector).translateInline(options),
-                    $submitButton = $('.action-primary:contains(\'Submit\')'),
+                    $submitButton = $('body').find('.action-primary'),
                     originalAjax = $.ajax;
 
                 $.ajax = jasmine.createSpy().and.callFake(function (request) {

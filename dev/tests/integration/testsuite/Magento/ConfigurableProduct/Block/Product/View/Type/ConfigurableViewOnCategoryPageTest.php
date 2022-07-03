@@ -102,7 +102,6 @@ class ConfigurableViewOnCategoryPageTest extends TestCase
     }
 
     /**
-     * @magentoDataFixture Magento/Catalog/_files/reindex_catalog_inventory_stock.php
      * @magentoDataFixture Magento/ConfigurableProduct/_files/configurable_product_with_category.php
      *
      * @return void

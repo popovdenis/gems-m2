@@ -41,9 +41,6 @@ class AdminUserCreateCommandTest extends TestCase
      */
     private $command;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $this->installerFactoryMock = $this->createMock(InstallerFactory::class);
@@ -54,17 +51,14 @@ class AdminUserCreateCommandTest extends TestCase
             ->getMock();
     }
 
-    /**
-     * @return void
-     */
-    public function testExecute(): void
+    public function testExecute()
     {
         $options = [
             '--' . AdminAccount::KEY_USER => 'user',
             '--' . AdminAccount::KEY_PASSWORD => '123123q',
             '--' . AdminAccount::KEY_EMAIL => 'test@test.com',
             '--' . AdminAccount::KEY_FIRST_NAME => 'John',
-            '--' . AdminAccount::KEY_LAST_NAME => 'Doe'
+            '--' . AdminAccount::KEY_LAST_NAME => 'Doe',
         ];
         $data = [
             AdminAccount::KEY_USER => 'user',
@@ -72,7 +66,7 @@ class AdminUserCreateCommandTest extends TestCase
             AdminAccount::KEY_EMAIL => 'test@test.com',
             AdminAccount::KEY_FIRST_NAME => 'John',
             AdminAccount::KEY_LAST_NAME => 'Doe',
-            InitParamListener::BOOTSTRAP_PARAM => null
+            InitParamListener::BOOTSTRAP_PARAM => null,
         ];
         $commandTester = new CommandTester($this->command);
         $installerMock = $this->createMock(Installer::class);
@@ -82,17 +76,30 @@ class AdminUserCreateCommandTest extends TestCase
         $this->assertEquals('Created Magento administrator user named user' . PHP_EOL, $commandTester->getDisplay());
     }
 
-    /**
-     * @return void
-     */
-    public function testInteraction(): void
+    public function testInteraction()
     {
         $application = new Application();
         $application->add($this->command);
 
-        $this->questionHelperMock
+        $this->questionHelperMock->expects($this->at(0))
             ->method('ask')
-            ->willReturnOnConsecutiveCalls('admin', 'Password123', 'john.doe@example.com', 'John', 'Doe');
+            ->willReturn('admin');
+
+        $this->questionHelperMock->expects($this->at(1))
+            ->method('ask')
+            ->willReturn('Password123');
+
+        $this->questionHelperMock->expects($this->at(2))
+            ->method('ask')
+            ->willReturn('john.doe@example.com');
+
+        $this->questionHelperMock->expects($this->at(3))
+            ->method('ask')
+            ->willReturn('John');
+
+        $this->questionHelperMock->expects($this->at(4))
+            ->method('ask')
+            ->willReturn('Doe');
 
         // We override the standard helper with our mock
         $this->command->getHelperSet()->set($this->questionHelperMock, 'question');
@@ -112,7 +119,7 @@ class AdminUserCreateCommandTest extends TestCase
             'version' => false,
             'ansi' => false,
             'no-ansi' => false,
-            'no-interaction' => false
+            'no-interaction' => false,
         ];
 
         $installerMock->expects($this->once())->method('installAdminUser')->with($expectedData);
@@ -132,11 +139,9 @@ class AdminUserCreateCommandTest extends TestCase
     /**
      * @param int $mode
      * @param string $description
-     *
-     * @return void
      * @dataProvider getOptionListDataProvider
      */
-    public function testGetOptionsList($mode, $description): void
+    public function testGetOptionsList($mode, $description)
     {
         /* @var $argsList \Symfony\Component\Console\Input\InputArgument[] */
         $argsList = $this->command->getOptionsList($mode);
@@ -147,27 +152,26 @@ class AdminUserCreateCommandTest extends TestCase
     /**
      * @return array
      */
-    public function getOptionListDataProvider(): array
+    public function getOptionListDataProvider()
     {
         return [
             [
                 'mode' => InputOption::VALUE_REQUIRED,
-                'description' => '(Required) Admin email'
+                'description' => '(Required) Admin email',
             ],
             [
                 'mode' => InputOption::VALUE_OPTIONAL,
-                'description' => 'Admin email'
-            ]
+                'description' => 'Admin email',
+            ],
         ];
     }
 
     /**
+     * @dataProvider validateDataProvider
      * @param bool[] $options
      * @param string[] $errors
-     *
-     * @dataProvider validateDataProvider
      */
-    public function testValidate(array $options, array $errors): void
+    public function testValidate(array $options, array $errors)
     {
         $inputMock = $this->getMockForAbstractClass(
             InputInterface::class,
@@ -175,17 +179,17 @@ class AdminUserCreateCommandTest extends TestCase
             '',
             false
         );
-        $inputMock
-            ->method('getOption')
-            ->willReturnOnConsecutiveCalls(...$options);
-
+        $index = 0;
+        foreach ($options as $option) {
+            $inputMock->expects($this->at($index++))->method('getOption')->willReturn($option);
+        }
         $this->assertEquals($errors, $this->command->validate($inputMock));
     }
 
     /**
      * @return array
      */
-    public function validateDataProvider(): array
+    public function validateDataProvider()
     {
         return [
             [

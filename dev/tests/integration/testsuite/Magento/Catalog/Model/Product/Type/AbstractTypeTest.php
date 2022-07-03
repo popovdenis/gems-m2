@@ -650,9 +650,12 @@ class AbstractTypeTest extends TestCase
         $uploaderMock = $this->getPreparedUploader();
         /** @var FileTransferFactory $httpFactory */
         $httpFactoryMock = $this->createPartialMock(FileTransferFactory::class, ['create']);
-        $httpFactoryMock
+        $httpFactoryMock->expects($this->at(0))
             ->method('create')
-            ->willReturnOnConsecutiveCalls($uploaderMock, clone $uploaderMock);
+            ->willReturn($uploaderMock);
+        $httpFactoryMock->expects($this->at(1))
+            ->method('create')
+            ->willReturn(clone $uploaderMock);
         $this->objectManager->addSharedInstance($httpFactoryMock, FileTransferFactory::class);
     }
 

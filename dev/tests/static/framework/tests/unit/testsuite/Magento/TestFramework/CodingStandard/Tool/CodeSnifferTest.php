@@ -28,7 +28,7 @@ class CodeSnifferTest extends \PHPUnit\Framework\TestCase
     const RULE_SET = 'some/ruleset/directory';
 
     /**
-     * Report file path
+     * Report file
      */
     const REPORT_FILE = 'some/report/file.xml';
 
@@ -52,7 +52,6 @@ class CodeSnifferTest extends \PHPUnit\Framework\TestCase
             'standards' => [self::RULE_SET],
             'extensions' => $extensions,
             'reports' => ['full' => self::REPORT_FILE],
-            'reportWidth' => 120
         ];
 
         $this->_tool->setExtensions($extensions);

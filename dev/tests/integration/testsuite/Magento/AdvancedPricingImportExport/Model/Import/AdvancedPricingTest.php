@@ -175,7 +175,6 @@ class AdvancedPricingTest extends \PHPUnit\Framework\TestCase
         $index = 0;
         $ids = [];
         $origPricingData = [];
-        $skus = ['simple'];
         while (isset($skus[$index])) {
             $ids[$index] = $productRepository->get($skus[$index])->getId();
             $origPricingData[$index] = $this->objectManager->create(\Magento\Catalog\Model\Product::class)
@@ -193,16 +192,12 @@ class AdvancedPricingTest extends \PHPUnit\Framework\TestCase
         $exportModel->setWriter(
             \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
                 \Magento\ImportExport\Model\Export\Adapter\Csv::class,
-                ['fileSystem' => $this->fileSystem]
+                ['fileSystem' => $this->fileSystem, 'destination' => $csvfile]
             )
         );
-        $exportContent = $exportModel->export();
-        $this->assertNotEmpty($exportContent);
+        $this->assertNotEmpty($exportModel->export());
 
-        $directory = $this->fileSystem->getDirectoryWrite(DirectoryList::VAR_IMPORT_EXPORT);
-        $directory->getDriver()->filePutContents($directory->getAbsolutePath($csvfile), $exportContent);
-
-        $errors = $this->doImport($csvfile, DirectoryList::VAR_IMPORT_EXPORT, Import::BEHAVIOR_DELETE, true);
+        $errors = $this->doImport($csvfile, DirectoryList::VAR_DIR, Import::BEHAVIOR_DELETE, true);
 
         $this->assertTrue(
             $errors->getErrorsCount() == 0,

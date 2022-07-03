@@ -50,8 +50,6 @@ class WebApiApplication extends Application
             }
             $this->_shell->execute($installCmd, $installArgs);
         }
-
-        $this->runPostInstallCommands();
     }
 
     /**

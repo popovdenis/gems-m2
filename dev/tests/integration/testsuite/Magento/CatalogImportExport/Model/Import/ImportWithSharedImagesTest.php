@@ -14,6 +14,7 @@ use Magento\Framework\App\Bootstrap as AppBootstrap;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem;
+use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\Import\Source\Csv;
@@ -40,8 +41,8 @@ class ImportWithSharedImagesTest extends TestCase
     /** @var ProductRepositoryInterface */
     private $productRepository;
 
-    /** @var Filesystem\Directory\Write */
-    private $mediaDirectory;
+    /** @var File */
+    private $fileDriver;
 
     /** @var Import */
     private $import;
@@ -73,7 +74,7 @@ class ImportWithSharedImagesTest extends TestCase
 
         $this->objectManager = Bootstrap::getObjectManager();
         $this->fileSystem = $this->objectManager->get(Filesystem::class);
-        $this->mediaDirectory = $this->fileSystem->getDirectoryWrite(DirectoryList::MEDIA);
+        $this->fileDriver = $this->objectManager->get(File::class);
         $this->mediaConfig = $this->objectManager->get(ConfigInterface::class);
         $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
         $this->productRepository->cleanCache();
@@ -132,7 +133,7 @@ class ImportWithSharedImagesTest extends TestCase
             $this->filesToRemove[] = $productImagePath;
             $this->assertEquals($expectedImagePath, $productImageFile);
             $this->assertNotEmpty($productImagePath);
-            $this->assertTrue($this->mediaDirectory->isExist($productImagePath));
+            $this->assertTrue($this->fileDriver->isExists($productImagePath));
         }
     }
 
@@ -144,7 +145,9 @@ class ImportWithSharedImagesTest extends TestCase
     private function removeFiles(): void
     {
         foreach ($this->filesToRemove as $file) {
-            $this->mediaDirectory->delete($file);
+            if ($this->fileDriver->isExists($file)) {
+                $this->fileDriver->deleteFile($file);
+            }
         }
     }
 
@@ -194,21 +197,17 @@ class ImportWithSharedImagesTest extends TestCase
      */
     private function updateUploader(): void
     {
-        $mediaDir = !$this->mediaDirectory->getDriver() instanceof Filesystem\Driver\File ?
-            'media' : $this->appParams[DirectoryList::MEDIA][DirectoryList::PATH];
-
-        $destDir = $mediaDir . DIRECTORY_SEPARATOR . $this->mediaConfig->getBaseMediaPath();
-        $tmpDir = $mediaDir . DIRECTORY_SEPARATOR . 'import/images';
-
-        $this->mediaDirectory->create($this->mediaConfig->getBaseMediaPath());
-        $this->mediaDirectory->create('import/images');
-
-        $this->import->setParameters(
-            [
-                Import::FIELD_NAME_IMG_FILE_DIR => $mediaDir . '/import/images'
-            ]
-        );
         $uploader = $this->import->getUploader();
+        $rootDirectory = $this->fileSystem->getDirectoryWrite(DirectoryList::ROOT);
+        $destDir = $rootDirectory->getRelativePath(
+            $this->appParams[DirectoryList::MEDIA][DirectoryList::PATH]
+            . DIRECTORY_SEPARATOR . $this->mediaConfig->getBaseMediaPath()
+        );
+        $tmpDir = $rootDirectory->getRelativePath(
+            $this->appParams[DirectoryList::MEDIA][DirectoryList::PATH]
+        );
+        $rootDirectory->create($destDir);
+        $rootDirectory->create($tmpDir);
         $uploader->setDestDir($destDir);
         $uploader->setTmpDir($tmpDir);
     }
@@ -221,13 +220,16 @@ class ImportWithSharedImagesTest extends TestCase
      */
     private function moveImages(string $fileName): void
     {
-        $tmpDir = $this->mediaDirectory->getRelativePath('import/images');
+        $rootDirectory = $this->fileSystem->getDirectoryWrite(DirectoryList::ROOT);
+        $tmpDir = $rootDirectory->getRelativePath(
+            $this->appParams[DirectoryList::MEDIA][DirectoryList::PATH]
+        );
         $fixtureDir = realpath(__DIR__ . '/../../_files');
-        $tmpFilePath = $this->mediaDirectory->getAbsolutePath($tmpDir . DIRECTORY_SEPARATOR . $fileName);
-        $this->mediaDirectory->create($tmpDir);
-        $this->mediaDirectory->getDriver()->filePutContents(
-            $tmpFilePath,
-            file_get_contents($fixtureDir . DIRECTORY_SEPARATOR . $fileName)
+        $tmpFilePath = $rootDirectory->getAbsolutePath($tmpDir . DIRECTORY_SEPARATOR . $fileName);
+        $this->fileDriver->createDirectory($tmpDir);
+        $rootDirectory->getDriver()->copy(
+            $fixtureDir . DIRECTORY_SEPARATOR . $fileName,
+            $tmpFilePath
         );
         $this->filesToRemove[] = $tmpFilePath;
     }

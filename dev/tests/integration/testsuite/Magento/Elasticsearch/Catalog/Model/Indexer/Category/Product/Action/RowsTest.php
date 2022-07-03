@@ -55,14 +55,6 @@ class RowsTest extends \PHPUnit\Framework\TestCase
     private $fulltextSearchCollectionFactory;
 
     /**
-     * Elasticsearch7 engine configuration is also compatible with OpenSearch 1
-     */
-    private const ENGINE_SUPPORTED_VERSIONS = [
-        7 => 'elasticsearch7',
-        1 => 'elasticsearch7',
-    ];
-
-    /**
      * @inheritdoc
      */
     protected function setUp(): void
@@ -79,14 +71,7 @@ class RowsTest extends \PHPUnit\Framework\TestCase
     protected function assertPreConditions(): void
     {
         $currentEngine = $this->objectManager->get(EngineResolverInterface::class)->getCurrentSearchEngine();
-        $this->assertEquals(
-            $this->getInstalledSearchEngine(),
-            $currentEngine,
-            sprintf(
-                'Search engine configuration "%s" is not compatible with the installed version',
-                $currentEngine
-            )
-        );
+        $this->assertEquals($this->getInstalledSearchEngine(), $currentEngine);
     }
 
     /**
@@ -99,7 +84,7 @@ class RowsTest extends \PHPUnit\Framework\TestCase
         if (!$this->searchEngine) {
             // phpstan:ignore "Class Magento\TestModuleCatalogSearch\Model\ElasticsearchVersionChecker not found."
             $version = $this->objectManager->get(ElasticsearchVersionChecker::class)->getVersion();
-            $this->searchEngine = self::ENGINE_SUPPORTED_VERSIONS[$version] ?? 'elasticsearch' . $version;
+            $this->searchEngine = 'elasticsearch' . $version;
         }
 
         return $this->searchEngine;

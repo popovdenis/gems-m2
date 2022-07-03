@@ -192,14 +192,8 @@ class AccountManagementTest extends \PHPUnit\Framework\TestCase
         $this->startNewSession($activeSessionId);
         $this->assertNotNull($this->getCustomerCutoff($customerId), 'Customer cutoff session should be set.');
         // Make sure current visitor session is updated.
-        $this->assertLessThanOrEqual(
-            $this->getCustomerCutoff($customerId),
-            $this->getVisitorCreatedAt($activeVisitor->getId())
-        );
-        $this->assertGreaterThan(
-            $this->getCustomerCutoff($customerId),
-            $this->getVisitorCreatedAt($currentVisitor->getId())
-        );
+        $this->assertLessThanOrEqual($this->getCustomerCutoff($customerId), $this->getVisitorCreatedAt($activeVisitor->getId()));
+        $this->assertGreaterThan($this->getCustomerCutoff($customerId), $this->getVisitorCreatedAt($currentVisitor->getId()));
 
         $this->accountManagement->authenticate('customer@example.com', 'new_Password123');
     }
@@ -381,10 +375,10 @@ class AccountManagementTest extends \PHPUnit\Framework\TestCase
      * @magentoDataFixture Magento/Customer/_files/customer.php
      *
      */
-    public function testValidateResetPasswordLinkTokenEmpty()
+    public function testValidateResetPasswordLinkTokenNull()
     {
         try {
-            $this->accountManagement->validateResetPasswordLinkToken(1, '');
+            $this->accountManagement->validateResetPasswordLinkToken(1, null);
             $this->fail('Expected exception not thrown.');
         } catch (InputException $ie) {
             $this->assertEquals('"%fieldName" is required. Enter and try again.', $ie->getRawMessage());
@@ -397,12 +391,25 @@ class AccountManagementTest extends \PHPUnit\Framework\TestCase
     /**
      * @magentoDataFixture Magento/Customer/_files/customer.php
      */
-    public function testValidateResetPasswordLinkTokenInvalidId()
+    public function testValidateResetPasswordLinkTokenWithoutId()
     {
         $token = 'randomStr123';
         $this->setResetPasswordData($token, 'Y-m-d H:i:s');
-        $this->expectException(\Magento\Framework\Exception\InputException::class);
-        $this->accountManagement->validateResetPasswordLinkToken(0, $token);
+        $this->assertTrue(
+            $this->accountManagement->validateResetPasswordLinkToken(null, $token)
+        );
+    }
+    /**
+     * @magentoDataFixture Magento/Customer/_files/two_customers.php
+     */
+    public function testValidateResetPasswordLinkTokenAmbiguous()
+    {
+        $this->expectException(\Magento\Framework\Exception\State\ExpiredException::class);
+
+        $token = 'randomStr123';
+        $this->setResetPasswordData($token, 'Y-m-d H:i:s', 1);
+        $this->setResetPasswordData($token, 'Y-m-d H:i:s', 2);
+        $this->accountManagement->validateResetPasswordLinkToken(null, $token);
     }
 
     /**
@@ -447,14 +454,8 @@ class AccountManagementTest extends \PHPUnit\Framework\TestCase
         $this->startNewSession($activeSessionId);
         $this->assertNotNull($this->getCustomerCutoff($customerId), 'Customer cutoff session should be set.');
         // Make sure current visitor session is updated.
-        $this->assertLessThanOrEqual(
-            $this->getCustomerCutoff($customerId),
-            $this->getVisitorCreatedAt($activeVisitor->getId())
-        );
-        $this->assertGreaterThan(
-            $this->getCustomerCutoff($customerId),
-            $this->getVisitorCreatedAt($currentVisitor->getId())
-        );
+        $this->assertLessThanOrEqual($this->getCustomerCutoff($customerId), $this->getVisitorCreatedAt($activeVisitor->getId()));
+        $this->assertGreaterThan($this->getCustomerCutoff($customerId), $this->getVisitorCreatedAt($currentVisitor->getId()));
     }
 
     /**
@@ -541,7 +542,21 @@ class AccountManagementTest extends \PHPUnit\Framework\TestCase
         $resetToken = 'lsdj579slkj5987slkj595lkj';
         $password = 'new_Password123';
         $this->setResetPasswordData($resetToken, 'Y-m-d H:i:s');
-        $this->expectException(InputException::class);
+        $this->assertTrue(
+            $this->accountManagement->resetPassword(null, $resetToken, $password)
+        );
+    }
+    /**
+     * @magentoDataFixture Magento/Customer/_files/two_customers.php
+     */
+    public function testResetPasswordAmbiguousToken()
+    {
+        $this->expectException(\Magento\Framework\Exception\State\ExpiredException::class);
+
+        $resetToken = 'lsdj579slkj5987slkj595lkj';
+        $password = 'new_Password123';
+        $this->setResetPasswordData($resetToken, 'Y-m-d H:i:s', 1);
+        $this->setResetPasswordData($resetToken, 'Y-m-d H:i:s', 2);
         $this->accountManagement->resetPassword(null, $resetToken, $password);
     }
 

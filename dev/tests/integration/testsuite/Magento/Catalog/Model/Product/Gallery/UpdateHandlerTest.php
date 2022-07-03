@@ -16,13 +16,6 @@ use Magento\Catalog\Model\Product\Media\Config;
 use Magento\Catalog\Model\ResourceModel\Product as ProductResource;
 use Magento\Catalog\Model\ResourceModel\Product\Gallery;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Exception\ConfigurationMismatchException;
-use Magento\Framework\Exception\CouldNotSaveException;
-use Magento\Framework\Exception\FileSystemException;
-use Magento\Framework\Exception\InputException;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Exception\StateException;
 use Magento\Framework\Exception\ValidatorException;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\Filesystem;
@@ -32,14 +25,13 @@ use Magento\Store\Api\StoreRepositoryInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\TestFramework\Helper\Bootstrap;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Provides tests for media gallery images update during product save.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class UpdateHandlerTest extends TestCase
+class UpdateHandlerTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var ObjectManagerInterface
@@ -141,8 +133,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDataFixture Magento/Catalog/_files/product_image.php
      *
      * @return void
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
     public function testExecuteWithIllegalFilename(): void
     {
@@ -171,8 +161,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDataFixture Magento/Catalog/_files/product_with_image.php
      * @magentoDbIsolation enabled
      * @return void
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
     public function testExecuteWithOneImage(): void
     {
@@ -189,38 +177,6 @@ class UpdateHandlerTest extends TestCase
     }
 
     /**
-     * Tests updating image label and label default during product save.
-     *
-     * @magentoDataFixture Magento/Catalog/_files/product_with_image.php
-     * @magentoDbIsolation enabled
-     * @return void
-     * @throws LocalizedException
-     */
-    public function testExecuteImageWithUpdatedAttributeLabel(): void
-    {
-        $product = $this->getProduct();
-        $productImages = $this->galleryResource->loadProductGalleryByAttributeId($product, $this->mediaAttributeId);
-        $updatedImage = reset($productImages);
-        $this->assertIsArray($updatedImage);
-        $this->assertEquals('Image Alt Text', $updatedImage['label']);
-        $this->assertEquals('Image Alt Text', $updatedImage['label_default']);
-        $this->updateProductGalleryImages($product, ['label' => 'New image']);
-        $this->updateHandler->execute($product);
-        $productImages = $this->galleryResource->loadProductGalleryByAttributeId($product, $this->mediaAttributeId);
-        $updatedImage = reset($productImages);
-        $this->assertIsArray($updatedImage);
-        $this->assertEquals('New image', $updatedImage['label']);
-        $this->assertEquals('New image', $updatedImage['label_default']);
-        $this->updateProductGalleryImages($product, ['label' => '']);
-        $this->updateHandler->execute($product);
-        $productImages = $this->galleryResource->loadProductGalleryByAttributeId($product, $this->mediaAttributeId);
-        $updatedImage = reset($productImages);
-        $this->assertIsArray($updatedImage);
-        $this->assertEquals('', $updatedImage['label']);
-        $this->assertEquals('', $updatedImage['label_default']);
-    }
-
-    /**
      * Tests updating image roles during product save.
      *
      * @magentoDataFixture Magento/Catalog/_files/product_with_multiple_images.php
@@ -228,7 +184,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDbIsolation enabled
      * @param array $roles
      * @return void
-     * @throws LocalizedException
      */
     public function testExecuteWithTwoImagesAndDifferentRoles(array $roles): void
     {
@@ -253,9 +208,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDbIsolation enabled
      * @param array $roles
      * @return void
-     * @throws LocalizedException
-     * @throws ConfigurationMismatchException
-     * @throws NoSuchEntityException
      */
     public function testExecuteWithTwoImagesAndDifferentRolesOnStoreView(array $roles): void
     {
@@ -323,7 +275,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDataFixture Magento/Catalog/_files/product_with_multiple_images.php
      * @magentoDbIsolation enabled
      * @return void
-     * @throws LocalizedException
      */
     public function testExecuteWithTwoImagesAndChangedPosition(): void
     {
@@ -352,7 +303,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDataFixture Magento/Catalog/_files/product_with_image.php
      * @magentoDbIsolation enabled
      * @return void
-     * @throws LocalizedException
      */
     public function testExecuteWithImageToDelete(): void
     {
@@ -382,8 +332,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDataFixture Magento/Store/_files/second_store.php
      * @magentoDbIsolation enabled
      * @return void
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
     public function testExecuteWithTwoImagesOnStoreView(): void
     {
@@ -434,7 +382,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDataFixture Magento/Catalog/_files/second_product_simple.php
      *
      * @return void
-     * @throws LocalizedException
      */
     public function testDeleteSharedImage(): void
     {
@@ -469,7 +416,6 @@ class UpdateHandlerTest extends TestCase
      * @param int|null $storeId
      * @param string|null $sku
      * @return ProductInterface|Product
-     * @throws NoSuchEntityException
      */
     private function getProduct(?int $storeId = null, ?string $sku = null): ProductInterface
     {
@@ -495,11 +441,6 @@ class UpdateHandlerTest extends TestCase
      * @magentoDataFixture Magento/Store/_files/second_website_with_two_stores.php
      * @magentoDbIsolation disabled
      * @return void
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     * @throws CouldNotSaveException
-     * @throws InputException
-     * @throws StateException
      */
     public function testDeleteWithMultiWebsites(): void
     {
@@ -515,7 +456,7 @@ class UpdateHandlerTest extends TestCase
         $this->assertNotEmpty($product->getMediaGalleryEntries());
         $image = $product->getImage();
         $path = $this->mediaDirectory->getAbsolutePath($this->config->getBaseMediaPath() . $image);
-        $this->assertTrue($this->mediaDirectory->isExist($path));
+        $this->assertFileExists($path);
         // Assign product to default and second website and save changes
         $product->setWebsiteIds([$defaultWebsiteId, $secondWebsiteId]);
         $this->productRepository->save($product);
@@ -548,7 +489,7 @@ class UpdateHandlerTest extends TestCase
         $product = $this->getProduct($globalScopeId);
         // Assert that image was not deleted as it has roles in second store
         $this->assertNotEmpty($product->getMediaGalleryEntries());
-        $this->assertTrue($this->mediaDirectory->isExist($path));
+        $this->assertFileExists($path);
         // Unlink second website, delete existing images and save changes
         $product->setWebsiteIds([$defaultWebsiteId]);
         $product->setMediaGalleryEntries([]);
@@ -577,9 +518,6 @@ class UpdateHandlerTest extends TestCase
      * @param string $expectedFile
      * @param bool $exist
      * @return void
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     * @throws FileSystemException
      */
     public function testUpdateImage(string $newFile, string $expectedFile, bool $exist): void
     {
@@ -592,7 +530,7 @@ class UpdateHandlerTest extends TestCase
         $this->assertEquals($oldImage['file'], $product->getThumbnail());
         $path = $this->mediaDirectory->getAbsolutePath($this->config->getBaseMediaPath() . $oldImage['file']);
         $tmpPath = $this->mediaDirectory->getAbsolutePath($this->config->getBaseTmpMediaPath() . $oldImage['file']);
-        $this->assertTrue($this->mediaDirectory->isExist($path));
+        $this->assertFileExists($path);
         $this->mediaDirectory->getDriver()->copy($path, $tmpPath);
         if (!$exist) {
             $this->mediaDirectory->getDriver()->deleteFile($path);
@@ -625,7 +563,7 @@ class UpdateHandlerTest extends TestCase
         $this->assertEquals($newImageRoles['thumbnail'], $product->getThumbnail());
         $path = $this->mediaDirectory->getAbsolutePath($this->config->getBaseMediaPath() . $product->getImage());
         // Assert that the image exists on disk.
-        $this->assertTrue($this->mediaDirectory->isExist($path));
+        $this->assertFileExists($path);
     }
 
     /**
@@ -669,8 +607,6 @@ class UpdateHandlerTest extends TestCase
      * @param array $expectedImages
      * @param array $select
      * @return void
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
     public function testAddImages(
         string $addFromStore,
@@ -761,7 +697,6 @@ class UpdateHandlerTest extends TestCase
      * @param ProductInterface $product
      * @param string $imagePath
      * @return void
-     * @throws FileSystemException
      */
     private function checkProductImageExist(ProductInterface $product, string $imagePath): void
     {
@@ -800,8 +735,6 @@ class UpdateHandlerTest extends TestCase
      * @param string $imagePath
      * @param string $productSku
      * @return void
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
     private function duplicateMediaGalleryForProduct(string $imagePath, string $productSku): void
     {

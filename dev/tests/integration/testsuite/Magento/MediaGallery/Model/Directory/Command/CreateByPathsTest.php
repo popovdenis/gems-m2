@@ -19,8 +19,6 @@ use Magento\TestFramework\Helper\Bootstrap;
 
 /**
  * Test for CreateDirectoriesByPathsInterface
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CreateByPathsTest extends \PHPUnit\Framework\TestCase
 {
@@ -39,9 +37,6 @@ class CreateByPathsTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Absolute path to the media directory
-     */
-    /**
-     * @var \Magento\Framework\Filesystem\Directory\ReadInterface
      */
     private $mediaDirectoryPath;
 
@@ -111,9 +106,9 @@ class CreateByPathsTest extends \PHPUnit\Framework\TestCase
     public function testCreateDirectory(): void
     {
         $this->createByPaths->execute([self::TEST_DIRECTORY_NAME]);
-        $this->assertTrue($this->mediaDirectory->isExist($this->mediaDirectoryPath . self::TEST_DIRECTORY_NAME));
+        $this->assertFileExists($this->mediaDirectoryPath . self::TEST_DIRECTORY_NAME);
         $this->deleteByPaths->execute([self::TEST_DIRECTORY_NAME]);
-        $this->assertFalse($this->mediaDirectory->isExist($this->mediaDirectoryPath . self::TEST_DIRECTORY_NAME));
+        $this->assertFileDoesNotExist($this->mediaDirectoryPath . self::TEST_DIRECTORY_NAME);
     }
 
     /**
@@ -157,11 +152,11 @@ class CreateByPathsTest extends \PHPUnit\Framework\TestCase
         $childPath = $dir . '/testCreateDirectory';
 
         $this->createByPaths->execute([$dir]);
-        $this->assertTrue($this->mediaDirectory->isExist($this->mediaDirectoryPath . $dir));
+        $this->assertFileExists($this->mediaDirectoryPath . $dir);
         $this->createByPaths->execute([$childPath]);
-        $this->assertTrue($this->mediaDirectory->isExist($this->mediaDirectoryPath . $childPath));
+        $this->assertFileExists($this->mediaDirectoryPath . $childPath);
         $this->deleteByPaths->execute([$dir]);
-        $this->assertFalse($this->mediaDirectory->isExist($this->mediaDirectoryPath . $dir));
+        $this->assertFileDoesNotExist($this->mediaDirectoryPath . $dir);
     }
 
     /**
@@ -172,7 +167,7 @@ class CreateByPathsTest extends \PHPUnit\Framework\TestCase
         $this->expectException(CouldNotSaveException::class);
 
         $this->createByPaths->execute([self::TEST_DIRECTORY_NAME]);
-        $this->assertTrue($this->mediaDirectory->isExist($this->mediaDirectoryPath . self::TEST_DIRECTORY_NAME));
+        $this->assertFileExists($this->mediaDirectoryPath . self::TEST_DIRECTORY_NAME);
         $this->createByPaths->execute([self::TEST_DIRECTORY_NAME]);
     }
 

@@ -31,19 +31,13 @@ class AbstractFileTest extends TestCase
      */
     protected $_abstractLoaderMock;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $this->_dictionaryMock = $this->createMock(Dictionary::class);
         $this->_factoryMock = $this->createMock(Factory::class);
     }
 
-    /**
-     * @return void
-     */
-    public function testLoadWrongFile(): void
+    public function testLoadWrongFile()
     {
         $this->expectException('InvalidArgumentException');
         $this->expectExceptionMessage('Cannot open dictionary file: "wrong_file.csv".');
@@ -58,10 +52,7 @@ class AbstractFileTest extends TestCase
         $abstractLoaderMock->load('wrong_file.csv');
     }
 
-    /**
-     * @return void
-     */
-    public function testLoad(): void
+    public function testLoad()
     {
         $abstractLoaderMock = $this->getMockForAbstractClass(
             AbstractFile::class,
@@ -72,53 +63,63 @@ class AbstractFileTest extends TestCase
             true,
             ['_openFile', '_readFile', '_closeFile']
         );
-        $abstractLoaderMock
-            ->method('_readFile')
-            ->willReturnOnConsecutiveCalls(
-                ['phrase1', 'translation1'],
-                ['phrase2', 'translation2', 'context_type2', 'context_value2']
-            );
+        $abstractLoaderMock->expects(
+            $this->at(1)
+        )->method(
+            '_readFile'
+        )->willReturn(
+            ['phrase1', 'translation1']
+        );
+        $abstractLoaderMock->expects(
+            $this->at(2)
+        )->method(
+            '_readFile'
+        )->willReturn(
+            ['phrase2', 'translation2', 'context_type2', 'context_value2']
+        );
 
         $phraseFirstMock = $this->createMock(Phrase::class);
         $phraseSecondMock = $this->createMock(Phrase::class);
 
-        $this->_factoryMock->expects($this->once())
-            ->method('createDictionary')
-            ->willReturn($this->_dictionaryMock);
-        $this->_factoryMock
-            ->method('createPhrase')
-            ->withConsecutive(
-                [
-                    [
-                        'phrase' => 'phrase1',
-                        'translation' => 'translation1',
-                        'context_type' => '',
-                        'context_value' => ''
-                    ]
-                ],
-                [
-                    [
-                        'phrase' => 'phrase2',
-                        'translation' => 'translation2',
-                        'context_type' => 'context_type2',
-                        'context_value' => 'context_value2'
-                    ]
-                ]
-            )
-            ->willReturnOnConsecutiveCalls($phraseFirstMock, $phraseSecondMock);
+        $this->_factoryMock->expects(
+            $this->once()
+        )->method(
+            'createDictionary'
+        )->willReturn(
+            $this->_dictionaryMock
+        );
+        $this->_factoryMock->expects(
+            $this->at(1)
+        )->method(
+            'createPhrase'
+        )->with(
+            ['phrase' => 'phrase1', 'translation' => 'translation1', 'context_type' => '', 'context_value' => '']
+        )->willReturn(
+            $phraseFirstMock
+        );
+        $this->_factoryMock->expects(
+            $this->at(2)
+        )->method(
+            'createPhrase'
+        )->with(
+            [
+                'phrase' => 'phrase2',
+                'translation' => 'translation2',
+                'context_type' => 'context_type2',
+                'context_value' => 'context_value2',
+            ]
+        )->willReturn(
+            $phraseSecondMock
+        );
 
-        $this->_dictionaryMock
-            ->method('addPhrase')
-            ->withConsecutive([$phraseFirstMock], [$phraseSecondMock]);
+        $this->_dictionaryMock->expects($this->at(0))->method('addPhrase')->with($phraseFirstMock);
+        $this->_dictionaryMock->expects($this->at(1))->method('addPhrase')->with($phraseSecondMock);
 
         /** @var AbstractFile $abstractLoaderMock */
         $this->assertEquals($this->_dictionaryMock, $abstractLoaderMock->load('test.csv'));
     }
 
-    /**
-     * @return void
-     */
-    public function testErrorsInPhraseCreating(): void
+    public function testErrorsInPhraseCreating()
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Invalid row #1: "exception_message".');
@@ -131,17 +132,28 @@ class AbstractFileTest extends TestCase
             true,
             ['_openFile', '_readFile']
         );
-        $abstractLoaderMock
-            ->method('_readFile')
-            ->withConsecutive()
-            ->willReturn(['phrase1', 'translation1']);
+        $abstractLoaderMock->expects(
+            $this->at(1)
+        )->method(
+            '_readFile'
+        )->willReturn(
+            ['phrase1', 'translation1']
+        );
 
-        $this->_factoryMock->expects($this->once())
-            ->method('createDictionary')
-            ->willReturn($this->_dictionaryMock);
-        $this->_factoryMock
-            ->method('createPhrase')
-            ->willThrowException(new \DomainException('exception_message'));
+        $this->_factoryMock->expects(
+            $this->once()
+        )->method(
+            'createDictionary'
+        )->willReturn(
+            $this->_dictionaryMock
+        );
+        $this->_factoryMock->expects(
+            $this->at(1)
+        )->method(
+            'createPhrase'
+        )->willThrowException(
+            new \DomainException('exception_message')
+        );
 
         /** @var AbstractFile $abstractLoaderMock */
         $this->assertEquals($this->_dictionaryMock, $abstractLoaderMock->load('test.csv'));

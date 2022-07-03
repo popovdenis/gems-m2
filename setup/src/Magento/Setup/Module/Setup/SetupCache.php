@@ -20,16 +20,15 @@ class SetupCache implements DataCacheInterface
     private $data = [];
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function setRow($table, $parentId, $rowId, $value)
     {
-        $value = $value !== false ? $value : [];
         $this->data[$table][$parentId][$rowId] = $value;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function setField($table, $parentId, $rowId, $field, $value)
     {
@@ -37,7 +36,7 @@ class SetupCache implements DataCacheInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function get($table, $parentId, $rowId, $field = null)
     {
@@ -49,7 +48,7 @@ class SetupCache implements DataCacheInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function remove($table, $parentId, $rowId)
     {
@@ -59,7 +58,7 @@ class SetupCache implements DataCacheInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function has($table, $parentId, $rowId, $field = null)
     {

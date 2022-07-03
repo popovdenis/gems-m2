@@ -26,7 +26,7 @@ class MethodsTest extends \PHPUnit\Framework\TestCase
      */
     public function testPaymentMethod($code, $methodClass)
     {
-        if (in_array($code, ['free', 'substitution', 'vault', 'payflowpro_cc_vault', 'fake_vault'])) {
+        if ($code == 'vault') {
             return;
         }
         Bootstrap::getObjectManager()->configure($this->getTestConfiguration());
@@ -64,13 +64,11 @@ class MethodsTest extends \PHPUnit\Framework\TestCase
             ->setMode(State::MODE_DEVELOPER);
         $this->assertNotEmpty($model->getTitle());
         foreach ([$model->getFormBlockType(), $model->getInfoBlockType()] as $blockClass) {
-            if (is_array($blockClass)) {
-                $blockClass=$blockClass['instance'] ?? '';
-            }
             $message = "Block class: {$blockClass}";
             /** @var $block \Magento\Framework\View\Element\Template */
             $block = $blockFactory->createBlock($blockClass);
             $block->setArea('frontend');
+            $this->assertFileExists((string)$block->getTemplateFile(), $message);
             if ($model->canUseInternal()) {
                 try {
                     Bootstrap::getObjectManager()->get(
@@ -108,12 +106,6 @@ class MethodsTest extends \PHPUnit\Framework\TestCase
         $helper = Bootstrap::getObjectManager()->get(\Magento\Payment\Helper\Data::class);
         $result = [];
         foreach ($helper->getPaymentMethods() as $code => $method) {
-            if (!isset($method['model'])) {
-                $this->addWarning(
-                    'The `model` node must be provided for payment method configuration with code: ' . $code
-                );
-                continue;
-            }
             $result[] = [$code, $method['model']];
         }
         return $result;

@@ -266,7 +266,3 @@
     width: 200px; /*must have*/
     height: 200px; /*must have*/
 }
-
-.ui-timepicker-div .ui_tpicker_unit_hide {
-    display:none;
-}

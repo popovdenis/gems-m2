@@ -6,7 +6,6 @@
 namespace Magento\Customer\Block\Form;
 
 use Magento\Customer\Block\DataProviders\AddressAttributeData;
-use Magento\Customer\ViewModel\Address\RegionProvider;
 use Magento\Framework\View\Element\Template;
 use Magento\TestFramework\Helper\Bootstrap;
 
@@ -29,7 +28,6 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
             ->setTemplate('Magento_Customer::form/register.phtml')
             ->setShowAddressFields(true);
         $this->setAttributeDataProvider($block);
-        $this->setRegionProvider($block);
 
         $this->assertStringContainsString('title="Company"', $block->toHtml());
     }
@@ -47,7 +45,6 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
         )->setTemplate('Magento_Customer::form/register.phtml')
         ->setShowAddressFields(true);
         $this->setAttributeDataProvider($block);
-        $this->setRegionProvider($block);
 
         $this->assertStringContainsString('title="Phone&#x20;Number"', $block->toHtml());
     }
@@ -65,7 +62,6 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
         )->setTemplate('Magento_Customer::form/register.phtml')
         ->setShowAddressFields(true);
         $this->setAttributeDataProvider($block);
-        $this->setRegionProvider($block);
 
         $this->assertStringNotContainsString('title="Fax"', $block->toHtml());
     }
@@ -90,7 +86,6 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
         )->setTemplate('Magento_Customer::form/register.phtml')
         ->setShowAddressFields(true);
         $this->setAttributeDataProvider($block);
-        $this->setRegionProvider($block);
 
         $this->assertStringNotContainsString('title="Company"', $block->toHtml());
     }
@@ -115,7 +110,6 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
         )->setTemplate('Magento_Customer::form/register.phtml')
         ->setShowAddressFields(true);
         $this->setAttributeDataProvider($block);
-        $this->setRegionProvider($block);
 
         $this->assertStringNotContainsString('title="Phone&#x20;Number"', $block->toHtml());
     }
@@ -140,7 +134,6 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
         )->setTemplate('Magento_Customer::form/register.phtml')
         ->setShowAddressFields(true);
         $this->setAttributeDataProvider($block);
-        $this->setRegionProvider($block);
 
         $this->assertStringContainsString('title="Fax"', $block->toHtml());
     }
@@ -156,7 +149,6 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
         )->setTemplate('Magento_Customer::form/register.phtml')
             ->setShowAddressFields(true);
         $this->setAttributeDataProvider($block);
-        $this->setRegionProvider($block);
 
         $this->assertStringNotContainsString('title="City"', $block->toHtml());
         $this->assertStringContainsString('title="Suburb"', $block->toHtml());
@@ -182,17 +174,5 @@ class RegisterTest extends \PHPUnit\Framework\TestCase
     {
         $attributeData = Bootstrap::getObjectManager()->get(AddressAttributeData::class);
         $block->setAttributeData($attributeData);
-    }
-
-    /**
-     * Set Region Provider View Model.
-     *
-     * @param Template $block
-     * @return void
-     */
-    private function setRegionProvider(Template $block): void
-    {
-        $regionProvider = Bootstrap::getObjectManager()->create(RegionProvider::class);
-        $block->setRegionProvider($regionProvider);
     }
 }

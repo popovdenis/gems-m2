@@ -25,7 +25,31 @@ class ProductInMultipleStoresTest extends GraphQlAbstract
     public function testProductFromSpecificAndDefaultStore()
     {
         $productSku = 'simple';
-        $query = $this->getQuery($productSku);
+
+        $query = <<<QUERY
+{
+    products(filter: {sku: {eq: "{$productSku}"}})
+    {
+        items {
+            id
+            name
+            price {
+                minimalPrice {
+                    amount {
+                        value
+                        currency
+                    }
+                }
+            }
+            sku
+            type_id
+            ... on PhysicalProductInterface {
+                weight
+            }
+        }
+    }
+}
+QUERY;
 
         /** @var \Magento\Store\Model\Store $store */
         $store =  ObjectManager::getInstance()->get(\Magento\Store\Model\Store::class);
@@ -65,53 +89,12 @@ class ProductInMultipleStoresTest extends GraphQlAbstract
             $response['products']['items'][0]['name'],
             'Product in the default store should be returned'
         );
-    }
 
-    /**
-     * Test a product from a non existing store
-     *
-     * @magentoApiDataFixture Magento/Catalog/_files/product_simple.php
-     */
-    public function testProductFromNonExistingStore()
-    {
+        // use case for invalid storeCode
         $nonExistingStoreCode = "non_existent_store";
         $headerMapInvalidStoreCode = ['Store' => $nonExistingStoreCode];
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Requested store is not found');
-        $this->graphQlQuery($this->getQuery('simple'), [], '', $headerMapInvalidStoreCode);
-    }
-
-    /**
-     * Return GraphQL query string by productSku
-     *
-     * @param string $productSku
-     * @return string
-     */
-    private function getQuery(string $productSku): string
-    {
-        return <<<QUERY
-        {
-            products(filter: {sku: {eq: "{$productSku}"}})
-            {
-                items {
-                    id
-                    name
-                    price {
-                        minimalPrice {
-                            amount {
-                                value
-                                currency
-                            }
-                        }
-                    }
-                    sku
-                    type_id
-                    ... on PhysicalProductInterface {
-                        weight
-                    }
-                }
-            }
-        }
-        QUERY;
+        $this->graphQlQuery($query, [], '', $headerMapInvalidStoreCode);
     }
 }

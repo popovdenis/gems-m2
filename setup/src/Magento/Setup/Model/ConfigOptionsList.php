@@ -252,8 +252,7 @@ class ConfigOptionsList implements ConfigOptionsListInterface
             $errors[] = $this->validateDbPrefix($options[ConfigOptionsListConstants::INPUT_KEY_DB_PREFIX]);
         }
 
-        if (isset($options[ConfigOptionsListConstants::INPUT_KEY_SKIP_DB_VALIDATION]) &&
-            !$options[ConfigOptionsListConstants::INPUT_KEY_SKIP_DB_VALIDATION]) {
+        if (!$options[ConfigOptionsListConstants::INPUT_KEY_SKIP_DB_VALIDATION]) {
             $errors[] = $this->validateDbSettings($options, $deploymentConfig);
         }
 

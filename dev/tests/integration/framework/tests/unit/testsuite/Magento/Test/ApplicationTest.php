@@ -23,9 +23,6 @@ use ReflectionClass;
 
 /**
  * Provides tests for \Magento\TestFramework\Application.
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- *
  */
 class ApplicationTest extends \PHPUnit\Framework\TestCase
 {
@@ -151,24 +148,26 @@ class ApplicationTest extends \PHPUnit\Framework\TestCase
                 true
             );
 
-        $withArgs = [];
         // Add expected shell execution calls
-        foreach ($expectedShellExecutionCalls as $expectedShellExecutionArguments) {
-            $withArgs[] = $expectedShellExecutionArguments;
+        foreach ($expectedShellExecutionCalls as $index => $expectedShellExecutionArguments) {
+            $this->shell
+                ->expects($this->at($index))
+                ->method('execute')
+                ->with(...$expectedShellExecutionArguments);
         }
 
         if ($isExceptionExpected) {
             $this->expectException(DomainException::class);
             $this->expectExceptionMessage('"command" must be present in post install setup command arrays');
         } else {
-            $withArgs[] = [
-                PHP_BINARY . ' -f %s cache:disable -vvv --bootstrap=%s',
-                [BP . '/bin/magento', $this->getInitParamsQuery($tmpDir)]
-            ];
+            $this->shell
+                ->expects($this->at($index + 1))
+                ->method('execute')
+                ->with(
+                    PHP_BINARY . ' -f %s cache:disable -vvv --bootstrap=%s',
+                    [BP . '/bin/magento', $this->getInitParamsQuery($tmpDir)]
+                );
         }
-        $this->shell
-            ->method('execute')
-            ->withConsecutive(...$withArgs);
 
         $subject->install(false);
     }
@@ -183,7 +182,7 @@ class ApplicationTest extends \PHPUnit\Framework\TestCase
         $installShellCommandExpectation = [
             PHP_BINARY . ' -f %s setup:install -vvv ' .
             '--db-host=%s --db-user=%s --db-password=%s --db-name=%s --db-prefix=%s ' .
-            '--use-secure=%s --use-secure-admin=%s --magento-init-params=%s',
+            '--magento-init-params=%s',
             [
                 BP . '/bin/magento',
                 '/tmp/mysql.sock',
@@ -191,8 +190,6 @@ class ApplicationTest extends \PHPUnit\Framework\TestCase
                 '',
                 'magento_integration_tests',
                 '',
-                '0',
-                '0',
                 $this->getInitParamsQuery(sys_get_temp_dir()),
             ]
         ];

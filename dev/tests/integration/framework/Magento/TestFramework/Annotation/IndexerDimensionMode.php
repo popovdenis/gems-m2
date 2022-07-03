@@ -7,21 +7,19 @@ declare(strict_types=1);
 
 namespace Magento\TestFramework\Annotation;
 
-use Magento\Catalog\Model\Indexer\Product\Price\DimensionModeConfiguration;
 use Magento\Catalog\Model\Indexer\Product\Price\ModeSwitcher;
 use Magento\Catalog\Model\Indexer\Product\Price\ModeSwitcherConfiguration;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\ObjectManagerInterface;
-use Magento\TestFramework\Annotation\TestCaseAnnotation;
 use Magento\TestFramework\App\Config;
 use Magento\TestFramework\Helper\Bootstrap;
+use Magento\Catalog\Model\Indexer\Product\Price\DimensionModeConfiguration;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Implementation of the @magentoIndexerDimensionMode DocBlock annotation
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class IndexerDimensionMode
 {
@@ -57,12 +55,8 @@ class IndexerDimensionMode
     }
 
     /**
-     * Tries to set a Dimension mode if it wasn't set.
-     *
      * @param string $mode
      * @param TestCase $test
-     *
-     * @return void
      * @throws \Exception
      */
     private function setDimensionMode(string $mode, TestCase $test)
@@ -94,7 +88,7 @@ class IndexerDimensionMode
      */
     public function startTest(TestCase $test)
     {
-        $source = TestCaseAnnotation::getInstance()->getAnnotations($test);
+        $source = $test->getAnnotations();
 
         if (isset($source['method']['magentoIndexerDimensionMode'])) {
             $annotations = $source['method']['magentoIndexerDimensionMode'];

@@ -37,9 +37,6 @@ class PhpScannerTest extends TestCase
      */
     private $log;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $this->log = $this->createMock(Log::class);
@@ -47,31 +44,28 @@ class PhpScannerTest extends TestCase
         $this->testDir = str_replace('\\', '/', realpath(__DIR__ . '/../../') . '/_files');
     }
 
-    /**
-     * @return void
-     */
-    public function testCollectEntities(): void
+    public function testCollectEntities()
     {
         $testFiles = [
             $this->testDir . '/app/code/Magento/SomeModule/Helper/Test.php',
             $this->testDir . '/app/code/Magento/SomeModule/Model/DoubleColon.php',
             $this->testDir . '/app/code/Magento/SomeModule/Api/Data/SomeInterface.php',
-            $this->testDir . '/app/code/Magento/SomeModule/Model/StubWithAnonymousClass.php'
+            $this->testDir . '/app/code/Magento/SomeModule/Model/StubWithAnonymousClass.php',
         ];
 
-        $this->log
+        $this->log->expects(self::at(0))
             ->method('add')
-            ->withConsecutive(
-                [
-                    4,
-                    'Magento\SomeModule\Module\Factory',
-                    'Invalid Factory for nonexistent class Magento\SomeModule\Module in file ' . $testFiles[0]
-                ],
-                [
-                    4,
-                    'Magento\SomeModule\Element\Factory',
-                    'Invalid Factory declaration for class Magento\SomeModule\Element in file ' . $testFiles[0]
-                ]
+            ->with(
+                4,
+                'Magento\SomeModule\Module\Factory',
+                'Invalid Factory for nonexistent class Magento\SomeModule\Module in file ' . $testFiles[0]
+            );
+        $this->log->expects(self::at(1))
+            ->method('add')
+            ->with(
+                4,
+                'Magento\SomeModule\Element\Factory',
+                'Invalid Factory declaration for class Magento\SomeModule\Element in file ' . $testFiles[0]
             );
 
         $result = $this->scanner->collectEntities($testFiles);

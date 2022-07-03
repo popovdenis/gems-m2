@@ -5,13 +5,11 @@
  */
 namespace Magento\UrlRewrite\Block\Cms\Page;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Test for \Magento\UrlRewrite\Block\Cms\Page\Edit
  * @magentoAppArea adminhtml
  */
-class EditTest extends TestCase
+class EditTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * Test prepare layout
@@ -125,7 +123,7 @@ class EditTest extends TestCase
         if (isset($expected['back_button'])) {
             if ($expected['back_button']) {
                 if ($block->getCmsPage()->getId()) {
-                    $this->assertMatchesRegularExpression(
+                    $this->assertRegExp(
                         '/setLocation\([\\\'\"]\S+?\/cms_page/i',
                         $buttonsHtml,
                         'Back button is not present in category URL rewrite edit block'

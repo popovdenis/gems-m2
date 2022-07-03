@@ -6,14 +6,11 @@
 declare(strict_types=1);
 
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\CatalogInventory\Model\Indexer\Stock\Processor;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\StateException;
-use Magento\Framework\Registry;
 use Magento\TestFramework\Helper\Bootstrap;
 
-$registry = Bootstrap::getObjectManager()->get(Registry::class);
+$registry = Bootstrap::getObjectManager()->get(\Magento\Framework\Registry::class);
 
 $registry->unregister('isSecureArea');
 $registry->register('isSecureArea', true);
@@ -28,8 +25,6 @@ try {
     //Product already removed
 } catch (StateException $exception) {
 }
-
-ObjectManager::getInstance()->create(Processor::class)->reindexAll();
 
 $registry->unregister('isSecureArea');
 $registry->register('isSecureArea', false);

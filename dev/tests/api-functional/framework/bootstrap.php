@@ -50,13 +50,9 @@ try {
     if (!file_exists($installConfigFile)) {
         $installConfigFile = $installConfigFile . '.dist';
     }
-    $postInstallConfigFile = $settings->getAsConfigFile('TESTS_POST_INSTALL_SETUP_COMMAND_CONFIG_FILE');
-    if (!file_exists($postInstallConfigFile)) {
-        $postInstallConfigFile = $postInstallConfigFile . '.dist';
-    }
     $globalConfigFile = $settings->getAsConfigFile('TESTS_GLOBAL_CONFIG_FILE');
-    if (!file_exists($globalConfigFile)) {
-        $globalConfigFile = $globalConfigFile . '.dist';
+    if (!file_exists($installConfigFile)) {
+        $installConfigFile = $installConfigFile . '.dist';
     }
     $dirList     = new \Magento\Framework\App\Filesystem\DirectoryList(BP);
     $application = new \Magento\TestFramework\WebApiApplication(
@@ -66,9 +62,7 @@ try {
         $globalConfigFile,
         BP . '/app/etc/',
         $settings->get('TESTS_MAGENTO_MODE'),
-        AutoloaderRegistry::getAutoloader(),
-        false,
-        $postInstallConfigFile
+        AutoloaderRegistry::getAutoloader()
     );
 
     if (defined('TESTS_MAGENTO_INSTALLATION') && TESTS_MAGENTO_INSTALLATION === 'enabled') {
@@ -123,8 +117,7 @@ function setCustomErrorHandler()
 {
     set_error_handler(
         function ($errNo, $errStr, $errFile, $errLine) {
-            $errLevel = error_reporting();
-            if (($errLevel & $errNo) !== 0) {
+            if (error_reporting()) {
                 $errorNames = [
                     E_ERROR => 'Error',
                     E_WARNING => 'Warning',

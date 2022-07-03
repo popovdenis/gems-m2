@@ -11,8 +11,7 @@ function setCustomErrorHandler()
 {
     set_error_handler(
         function ($errNo, $errStr, $errFile, $errLine) {
-            $errLevel = error_reporting();
-            if (($errLevel & $errNo) !== 0) {
+            if (error_reporting()) {
                 $errorNames = [
                     E_ERROR => 'Error',
                     E_WARNING => 'Warning',

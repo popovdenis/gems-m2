@@ -3,158 +3,154 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Backend\Block\Widget;
-
-use Magento\Backend\Block\Widget\Grid\ColumnSet;
-use Magento\Backend\Block\Widget\Grid\Extended;
-use Magento\Backend\Model\Widget\Grid\Row\UrlGeneratorFactory;
-use Magento\Backend\Model\Widget\Grid\SubTotals;
-use Magento\Backend\Model\Widget\Grid\Totals;
-use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Filesystem;
-use Magento\Framework\Json\Helper\Data;
-use Magento\Framework\View\Element\Template;
-use Magento\Framework\View\Layout;
-use Magento\Framework\View\LayoutInterface;
-use Magento\TestFramework\Helper\Bootstrap;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 
 /**
  * @magentoAppArea adminhtml
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class GridTest extends TestCase
+class GridTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var ColumnSet
+     * @var \Magento\Backend\Block\Widget\Grid\ColumnSet
      */
-    private $block;
+    protected $_block;
 
     /**
-     * @var LayoutInterface|MockObject
+     * @var \Magento\Framework\View\LayoutInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    private $layoutMock;
+    protected $_layoutMock;
 
     /**
-     * @var ColumnSet|MockObject
+     * @var \Magento\Backend\Block\Widget\Grid\ColumnSet|\PHPUnit\Framework\MockObject\MockObject
      */
-    private $columnSetMock;
+    protected $_columnSetMock;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
-        $this->layoutMock = $this->getMockBuilder(Layout::class)
-            ->disableOriginalConstructor()
-            ->disableOriginalClone()
-            ->disableArgumentCloning()
-            ->disallowMockingUnknownTypes()
-            ->onlyMethods(['getChildName', 'getBlock', 'createBlock', 'renameElement', 'unsetChild', 'setChild'])
-            ->addMethods(['helper'])
-            ->getMock();
-
-        $this->columnSetMock = $this->getColumnSetMock();
+        $this->_layoutMock = $this->createPartialMock(
+            \Magento\Framework\View\Layout::class,
+            ['getChildName', 'getBlock', 'createBlock', 'helper', 'renameElement', 'unsetChild', 'setChild']
+        );
+        $this->_columnSetMock = $this->_getColumnSetMock();
 
         $returnValueMap = [
             ['grid', 'grid.columnSet', 'grid.columnSet'],
             ['grid', 'reset_filter_button', 'reset_filter_button'],
             ['grid', 'search_button', 'search_button'],
         ];
-        $this->layoutMock->expects($this->any())
-            ->method('getChildName')
-            ->willReturnMap($returnValueMap);
+        $this->_layoutMock->expects(
+            $this->any()
+        )->method(
+            'getChildName'
+        )->willReturnMap(
+            $returnValueMap
+        );
+        $this->_layoutMock->expects(
+            $this->any()
+        )->method(
+            'getBlock'
+        )->with(
+            'grid.columnSet'
+        )->willReturn(
+            $this->_columnSetMock
+        );
+        $this->_layoutMock->expects(
+            $this->any()
+        )->method(
+            'createBlock'
+        )->with(
+            \Magento\Backend\Block\Widget\Button::class
+        )->willReturn(
+            
+                \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+                    \Magento\Framework\View\LayoutInterface::class
+                )->createBlock(
+                    \Magento\Backend\Block\Widget\Button::class
+                )
+            
+        );
+        $this->_layoutMock->expects(
+            $this->any()
+        )->method(
+            'helper'
+        )->with(
+            \Magento\Framework\Json\Helper\Data::class
+        )->willReturn(
+            
+                \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+                    \Magento\Framework\Json\Helper\Data::class
+                )
+            
+        );
 
-        $this->layoutMock->expects($this->any())
-            ->method('getBlock')
-            ->with('grid.columnSet')
-            ->willReturn($this->columnSetMock);
-        $this->layoutMock->expects($this->any())
-            ->method('createBlock')
-            ->with(Button::class)
-            ->willReturn(Bootstrap::getObjectManager()->get(LayoutInterface::class)->createBlock(Button::class));
-        $this->layoutMock->expects($this->any())
-            ->method('helper')->with(Data::class)
-            ->willReturn(Bootstrap::getObjectManager()->get(Data::class));
-
-        $this->block = Bootstrap::getObjectManager()
-            ->get(LayoutInterface::class)
-            ->createBlock(Grid::class);
-
-        $this->block->setLayout($this->layoutMock);
-        $this->block->setNameInLayout('grid');
+        $this->_block = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+            \Magento\Framework\View\LayoutInterface::class
+        )->createBlock(
+            \Magento\Backend\Block\Widget\Grid::class
+        );
+        $this->_block->setLayout($this->_layoutMock);
+        $this->_block->setNameInLayout('grid');
     }
 
     /**
      * Retrieve the mocked column set block instance
      *
-     * @return ColumnSet|MockObject
+     * @return \Magento\Backend\Block\Widget\Grid\ColumnSet|\PHPUnit\Framework\MockObject\MockObject
      */
-    private function getColumnSetMock()
+    protected function _getColumnSetMock()
     {
-        $objectManager = Bootstrap::getObjectManager();
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
         $directoryList = $objectManager->create(
-            DirectoryList::class,
+            \Magento\Framework\App\Filesystem\DirectoryList::class,
             ['root' => __DIR__]
         );
-        return $this->getMockBuilder(ColumnSet::class)
+        return $this->getMockBuilder(\Magento\Backend\Block\Widget\Grid\ColumnSet::class)
             ->setConstructorArgs(
                 [
                     $objectManager->create(
                         \Magento\Framework\View\Element\Template\Context::class,
                         [
                             'filesystem' => $objectManager->create(
-                                Filesystem::class,
+                                \Magento\Framework\Filesystem::class,
                                 ['directoryList' => $directoryList]
                             )
                         ]
                     ),
-                    $objectManager->create(UrlGeneratorFactory::class),
-                    $objectManager->create(SubTotals::class),
-                    $objectManager->create(Totals::class)
+                    $objectManager->create(\Magento\Backend\Model\Widget\Grid\Row\UrlGeneratorFactory::class),
+                    $objectManager->create(\Magento\Backend\Model\Widget\Grid\SubTotals::class),
+                    $objectManager->create(\Magento\Backend\Model\Widget\Grid\Totals::class)
                 ]
             )
             ->getMock();
     }
 
-    /**
-     * @return void
-     */
-    public function testToHtmlPreparesColumns(): void
+    public function testToHtmlPreparesColumns()
     {
-        $this->columnSetMock->expects($this->once())->method('setRendererType');
-        $this->columnSetMock->expects($this->once())->method('setFilterType');
-        $this->columnSetMock->expects($this->once())->method('setSortable');
-        $this->block->setColumnRenderers(['filter' => 'Filter_Class']);
-        $this->block->setColumnFilters(['filter' => 'Filter_Class']);
-        $this->block->setSortable(false);
-        $this->block->toHtml();
+        $this->_columnSetMock->expects($this->once())->method('setRendererType');
+        $this->_columnSetMock->expects($this->once())->method('setFilterType');
+        $this->_columnSetMock->expects($this->once())->method('setSortable');
+        $this->_block->setColumnRenderers(['filter' => 'Filter_Class']);
+        $this->_block->setColumnFilters(['filter' => 'Filter_Class']);
+        $this->_block->setSortable(false);
+        $this->_block->toHtml();
     }
 
-    /**
-     * @return void
-     */
-    public function testGetMainButtonsHtmlReturnsEmptyStringIfFiltersArentVisible(): void
+    public function testGetMainButtonsHtmlReturnsEmptyStringIfFiltersArentVisible()
     {
-        $this->columnSetMock->expects($this->once())->method('isFilterVisible')->willReturn(false);
-        $this->block->getMainButtonsHtml();
+        $this->_columnSetMock->expects($this->once())->method('isFilterVisible')->willReturn(false);
+        $this->_block->getMainButtonsHtml();
     }
 
-    /**
-     * @return void
-     */
-    public function testGetMassactionBlock(): void
+    public function testGetMassactionBlock()
     {
-        /** @var $layout Layout */
-        $layout = Bootstrap::getObjectManager()->get(
-            LayoutInterface::class
+        /** @var $layout \Magento\Framework\View\Layout */
+        $layout = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+            \Magento\Framework\View\LayoutInterface::class
         );
-        /** @var $block Grid */
-        $block = $layout->createBlock(Extended::class, 'block');
-        $child = $layout->addBlock(Template::class, 'massaction', 'block');
+        /** @var $block \Magento\Backend\Block\Widget\Grid */
+        $block = $layout->createBlock(\Magento\Backend\Block\Widget\Grid\Extended::class, 'block');
+        $child = $layout->addBlock(\Magento\Framework\View\Element\Template::class, 'massaction', 'block');
         $this->assertSame($child, $block->getMassactionBlock());
     }
 }

@@ -2,7 +2,7 @@ parameters:
     checkExplicitMixedMissingReturn: true
     checkPhpDocMissingReturn: true
     reportUnmatchedIgnoredErrors: false
-    excludePaths:
+    excludes_analyse:
         - %rootDir%/../../../lib/internal/Magento/Framework/ObjectManager/Test/Unit/*
         - %rootDir%/../../../*/_files/*
         - %rootDir%/../../../dev/tests/*/Fixtures/*

@@ -3,26 +3,13 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\UrlRewrite\Block\Catalog\Category;
-
-use Magento\Catalog\Model\Category;
-use Magento\Framework\View\LayoutFactory;
-use Magento\Framework\View\LayoutInterface;
-use Magento\TestFramework\Helper\Bootstrap;
-use Magento\TestFramework\Helper\Xpath;
-use Magento\UrlRewrite\Block\Catalog\Edit\Form;
-use Magento\UrlRewrite\Block\Link;
-use Magento\UrlRewrite\Block\Selector;
-use Magento\UrlRewrite\Model\UrlRewrite;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Test for \Magento\UrlRewrite\Block\Catalog\Category\Edit
  * @magentoAppArea adminhtml
  */
-class EditTest extends TestCase
+class EditTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * Test prepare layout
@@ -32,49 +19,46 @@ class EditTest extends TestCase
      * @param array $blockAttributes
      * @param array $expected
      *
-     * @return void
      * @magentoAppIsolation enabled
      */
-    public function testPrepareLayout($blockAttributes, $expected): void
+    public function testPrepareLayout($blockAttributes, $expected)
     {
-        $objectManager = Bootstrap::getObjectManager();
-        $layoutFactory = $objectManager->get(LayoutFactory::class);
-        /** @var $layout LayoutInterface */
+        $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+        $layoutFactory = $objectManager->get(\Magento\Framework\View\LayoutFactory::class);
+        /** @var $layout \Magento\Framework\View\LayoutInterface */
         $layout = $layoutFactory->create();
 
-        /** @var $block Edit */
+        /** @var $block \Magento\UrlRewrite\Block\Catalog\Category\Edit */
         $block = $layout->createBlock(
-            Edit::class,
+            \Magento\UrlRewrite\Block\Catalog\Category\Edit::class,
             '',
             ['data' => $blockAttributes]
         );
 
-        $this->checkSelector($block, $expected);
-        $this->checkLinks($block, $expected);
-        $this->checkButtons($block, $expected);
-        $this->checkForm($block, $expected);
-        $this->checkCategoriesTree($block, $expected);
+        $this->_checkSelector($block, $expected);
+        $this->_checkLinks($block, $expected);
+        $this->_checkButtons($block, $expected);
+        $this->_checkForm($block, $expected);
+        $this->_checkCategoriesTree($block, $expected);
     }
 
     /**
      * Check selector
      *
-     * @param Edit $block
+     * @param \Magento\UrlRewrite\Block\Catalog\Category\Edit $block
      * @param array $expected
-     *
-     * @return void
      */
-    private function checkSelector($block, $expected): void
+    private function _checkSelector($block, $expected)
     {
         $layout = $block->getLayout();
         $blockName = $block->getNameInLayout();
 
-        /** @var $selectorBlock Selector|bool */
+        /** @var $selectorBlock \Magento\UrlRewrite\Block\Selector|bool */
         $selectorBlock = $layout->getChildBlock($blockName, 'selector');
 
         if ($expected['selector']) {
             $this->assertInstanceOf(
-                Selector::class,
+                \Magento\UrlRewrite\Block\Selector::class,
                 $selectorBlock,
                 'Child block with entity selector is invalid'
             );
@@ -86,22 +70,20 @@ class EditTest extends TestCase
     /**
      * Check links
      *
-     * @param Edit $block
+     * @param \Magento\UrlRewrite\Block\Catalog\Category\Edit $block
      * @param array $expected
-     *
-     * @return void
      */
-    private function checkLinks($block, $expected): void
+    private function _checkLinks($block, $expected)
     {
         $layout = $block->getLayout();
         $blockName = $block->getNameInLayout();
 
-        /** @var $categoryBlock Link|bool */
+        /** @var $categoryBlock \Magento\UrlRewrite\Block\Link|bool */
         $categoryBlock = $layout->getChildBlock($blockName, 'category_link');
 
         if ($expected['category_link']) {
             $this->assertInstanceOf(
-                Link::class,
+                \Magento\UrlRewrite\Block\Link::class,
                 $categoryBlock,
                 'Child block with category link is invalid'
             );
@@ -131,19 +113,17 @@ class EditTest extends TestCase
     /**
      * Check buttons
      *
-     * @param Edit $block
+     * @param \Magento\UrlRewrite\Block\Catalog\Category\Edit $block
      * @param array $expected
-     *
-     * @return void
      */
-    private function checkButtons($block, $expected): void
+    private function _checkButtons($block, $expected)
     {
         $buttonsHtml = $block->getButtonsHtml();
 
         if (isset($expected['back_button'])) {
             if ($expected['back_button']) {
                 if ($block->getCategory()->getId()) {
-                    $this->assertMatchesRegularExpression(
+                    $this->assertRegExp(
                         '/setLocation\([\\\'\"]\S+?\/category/i',
                         $buttonsHtml,
                         'Back button is not present in category URL rewrite edit block'
@@ -151,7 +131,7 @@ class EditTest extends TestCase
                 }
                 $this->assertEquals(
                     1,
-                    Xpath::getElementsCountForXpath(
+                    \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                         '//button[contains(@class,"back")]',
                         $buttonsHtml
                     ),
@@ -160,7 +140,7 @@ class EditTest extends TestCase
             } else {
                 $this->assertEquals(
                     0,
-                    Xpath::getElementsCountForXpath(
+                    \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                         '//button[contains(@class,"back")]',
                         $buttonsHtml
                     ),
@@ -172,7 +152,7 @@ class EditTest extends TestCase
         if ($expected['save_button']) {
             $this->assertEquals(
                 1,
-                Xpath::getElementsCountForXpath(
+                \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                     '//button[contains(@class,"save")]',
                     $buttonsHtml
                 ),
@@ -181,7 +161,7 @@ class EditTest extends TestCase
         } else {
             $this->assertEquals(
                 0,
-                Xpath::getElementsCountForXpath(
+                \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                     '//button[contains(@class,"save")]',
                     $buttonsHtml
                 ),
@@ -192,7 +172,7 @@ class EditTest extends TestCase
         if ($expected['reset_button']) {
             $this->assertEquals(
                 1,
-                Xpath::getElementsCountForXpath(
+                \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                     '//button[@title="Reset"]',
                     $buttonsHtml
                 ),
@@ -201,7 +181,7 @@ class EditTest extends TestCase
         } else {
             $this->assertEquals(
                 0,
-                Xpath::getElementsCountForXpath(
+                \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                     '//button[@title="Reset"]',
                     $buttonsHtml
                 ),
@@ -212,7 +192,7 @@ class EditTest extends TestCase
         if ($expected['delete_button']) {
             $this->assertEquals(
                 1,
-                Xpath::getElementsCountForXpath(
+                \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                     '//button[contains(@class,"delete")]',
                     $buttonsHtml
                 ),
@@ -221,7 +201,7 @@ class EditTest extends TestCase
         } else {
             $this->assertEquals(
                 0,
-                Xpath::getElementsCountForXpath(
+                \Magento\TestFramework\Helper\Xpath::getElementsCountForXpath(
                     '//button[contains(@class,"delete")]',
                     $buttonsHtml
                 ),
@@ -233,22 +213,20 @@ class EditTest extends TestCase
     /**
      * Check form
      *
-     * @param Edit $block
+     * @param \Magento\UrlRewrite\Block\Catalog\Category\Edit $block
      * @param array $expected
-     *
-     * @return void
      */
-    private function checkForm($block, $expected): void
+    private function _checkForm($block, $expected)
     {
         $layout = $block->getLayout();
         $blockName = $block->getNameInLayout();
 
-        /** @var $formBlock Form|bool */
+        /** @var $formBlock \Magento\UrlRewrite\Block\Catalog\Edit\Form|bool */
         $formBlock = $layout->getChildBlock($blockName, 'form');
 
         if ($expected['form']) {
             $this->assertInstanceOf(
-                Form::class,
+                \Magento\UrlRewrite\Block\Catalog\Edit\Form::class,
                 $formBlock,
                 'Child block with form is invalid'
             );
@@ -272,22 +250,20 @@ class EditTest extends TestCase
     /**
      * Check categories tree
      *
-     * @param Edit $block
+     * @param \Magento\UrlRewrite\Block\Catalog\Category\Edit $block
      * @param array $expected
-     *
-     * @return void
      */
-    private function checkCategoriesTree($block, $expected): void
+    private function _checkCategoriesTree($block, $expected)
     {
         $layout = $block->getLayout();
         $blockName = $block->getNameInLayout();
 
-        /** @var $categoriesTreeBlock Tree|bool */
+        /** @var $categoriesTreeBlock \Magento\UrlRewrite\Block\Catalog\Category\Tree|bool */
         $categoriesTreeBlock = $layout->getChildBlock($blockName, 'categories_tree');
 
         if ($expected['categories_tree']) {
             $this->assertInstanceOf(
-                Tree::class,
+                \Magento\UrlRewrite\Block\Catalog\Category\Tree::class,
                 $categoriesTreeBlock,
                 'Child block with categories tree is invalid'
             );
@@ -301,20 +277,20 @@ class EditTest extends TestCase
      *
      * @return array
      */
-    public function prepareLayoutDataProvider(): array
+    public function prepareLayoutDataProvider()
     {
-        /** @var $urlRewrite UrlRewrite */
-        $urlRewrite = Bootstrap::getObjectManager()->create(
-            UrlRewrite::class
+        /** @var $urlRewrite \Magento\UrlRewrite\Model\UrlRewrite */
+        $urlRewrite = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\UrlRewrite\Model\UrlRewrite::class
         );
-        /** @var $category Category */
-        $category = Bootstrap::getObjectManager()->create(
-            Category::class,
+        /** @var $category \Magento\Catalog\Model\Category */
+        $category = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\Catalog\Model\Category::class,
             ['data' => ['entity_id' => 1, 'name' => 'Test category']]
         );
-        /** @var $existingUrlRewrite UrlRewrite */
-        $existingUrlRewrite = Bootstrap::getObjectManager()->create(
-            UrlRewrite::class,
+        /** @var $existingUrlRewrite \Magento\UrlRewrite\Model\UrlRewrite */
+        $existingUrlRewrite = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(
+            \Magento\UrlRewrite\Model\UrlRewrite::class,
             ['data' => ['url_rewrite_id' => 1]]
         );
 

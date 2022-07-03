@@ -261,7 +261,7 @@ QUERY;
             $addToWishlistResponse['addProductsToWishlist']['wishlist']['items_count'],
             'Count is greater than 0'
         );
-        $message = 'Could not find a product with SKU "' . $sku . '"';
+        $message = 'The product is disabled';
         $this->assertEquals(
             $message,
             $addToWishlistResponse['addProductsToWishlist']['user_errors'][0]['message']

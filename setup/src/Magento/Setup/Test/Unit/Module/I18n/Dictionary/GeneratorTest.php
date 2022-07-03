@@ -51,9 +51,6 @@ class GeneratorTest extends TestCase
      */
     protected $optionsResolverFactory;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $this->parserMock = $this->createMock(Parser::class);
@@ -79,10 +76,7 @@ class GeneratorTest extends TestCase
         );
     }
 
-    /**
-     * @return void
-     */
-    public function testCreatingDictionaryWriter(): void
+    public function testCreatingDictionaryWriter()
     {
         $outputFilename = 'test';
 
@@ -106,10 +100,7 @@ class GeneratorTest extends TestCase
         $this->assertNull($property->getValue($this->generator));
     }
 
-    /**
-     * @return void
-     */
-    public function testUsingRightParserWhileWithoutContextParsing(): void
+    public function testUsingRightParserWhileWithoutContextParsing()
     {
         $baseDir = 'right_parser';
         $outputFilename = 'file.csv';
@@ -134,10 +125,7 @@ class GeneratorTest extends TestCase
         $this->generator->generate($baseDir, $outputFilename);
     }
 
-    /**
-     * @return void
-     */
-    public function testUsingRightParserWhileWithContextParsing(): void
+    public function testUsingRightParserWhileWithContextParsing()
     {
         $baseDir = 'right_parser2';
         $outputFilename = 'file.csv';
@@ -163,10 +151,7 @@ class GeneratorTest extends TestCase
         $this->generator->generate($baseDir, $outputFilename, true);
     }
 
-    /**
-     * @return void
-     */
-    public function testWritingPhrases(): void
+    public function testWritingPhrases()
     {
         $baseDir = 'WritingPhrases';
         $filesOptions = ['file1', 'file2'];
@@ -186,17 +171,13 @@ class GeneratorTest extends TestCase
         ];
 
         $this->parserMock->expects($this->once())->method('getPhrases')->willReturn($phrases);
-        $this->writerMock
-            ->method('write')
-            ->withConsecutive([$phrases[0]], [$phrases[1]]);
+        $this->writerMock->expects($this->at(0))->method('write')->with($phrases[0]);
+        $this->writerMock->expects($this->at(1))->method('write')->with($phrases[1]);
 
         $this->generator->generate($baseDir, 'file.csv');
     }
 
-    /**
-     * @return void
-     */
-    public function testGenerateWithNoPhrases(): void
+    public function testGenerateWithNoPhrases()
     {
         $this->expectException('UnexpectedValueException');
         $this->expectExceptionMessage('No phrases found in the specified dictionary file.');

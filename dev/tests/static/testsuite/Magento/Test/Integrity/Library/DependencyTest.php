@@ -5,21 +5,19 @@
  */
 namespace Magento\Test\Integrity\Library;
 
-use Laminas\Code\Reflection\ClassReflection;
-use Laminas\Code\Reflection\Exception\InvalidArgumentException;
 use Magento\Framework\App\Utility\Files;
+use Magento\Framework\App\Utility\AggregateInvoker;
 use Magento\Framework\Component\ComponentRegistrar;
-use Magento\Setup\Module\Di\Code\Reader\FileClassScanner;
 use Magento\TestFramework\Integrity\Library\Injectable;
 use Magento\TestFramework\Integrity\Library\PhpParser\ParserFactory;
 use Magento\TestFramework\Integrity\Library\PhpParser\Tokens;
-use PHPUnit\Framework\TestCase;
+use Laminas\Code\Reflection\FileReflection;
 
 /**
  * Test check if Magento library components contain incorrect dependencies to application layer
  *
  */
-class DependencyTest extends TestCase
+class DependencyTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * Collect errors
@@ -58,7 +56,7 @@ class DependencyTest extends TestCase
         ];
     }
 
-    public function testCheckDependencies(): void
+    public function testCheckDependencies()
     {
         $invoker = new \Magento\Framework\App\Utility\AggregateInvoker($this);
         $invoker(
@@ -66,23 +64,13 @@ class DependencyTest extends TestCase
              * @param string $file
              */
             function ($file) {
-                $this->errors = [];
                 $componentRegistrar = new ComponentRegistrar();
-                $reflectedFilePath = $this->getFilePath($file);
-                $tokens = new Tokens(file_get_contents($reflectedFilePath), new ParserFactory());
+                $fileReflection = new FileReflection($file);
+                $tokens = new Tokens($fileReflection->getContents(), new ParserFactory());
                 $tokens->parseContent();
 
-                $fileScanner = new FileClassScanner($file);
-                $className = $fileScanner->getClassName();
-                if ($className) {   // could be not a class but just a php-file
-                    $class = new ClassReflection($className);
-                    $classUses = (new Injectable())->getDependencies($class);
-                } else {
-                    $classUses = [];
-                }
-
                 $dependencies = array_merge(
-                    $classUses,
+                    (new Injectable())->getDependencies($fileReflection),
                     $tokens->getDependencies()
                 );
                 $allowedNamespaces = str_replace('\\', '\\\\', implode('|', $this->getAllowedNamespaces()));
@@ -95,7 +83,7 @@ class DependencyTest extends TestCase
                     foreach ($libraryPaths as $libraryPath) {
                         $filePath = str_replace('\\', '/', $libraryPath .  '/' . $dependencyPath . '.php');
                         if (preg_match($pattern, $dependency) && !file_exists($filePath)) {
-                            $this->errors[basename($reflectedFilePath)][] = $dependency;
+                            $this->errors[$fileReflection->getFileName()][] = $dependency;
                         }
                     }
                 }
@@ -106,29 +94,6 @@ class DependencyTest extends TestCase
             },
             $this->libraryDataProvider()
         );
-    }
-
-    /**
-     * copied from laminas-code 3.5.1
-     *
-     * @param string $filename
-     *
-     * @return string
-     */
-    private function getFilePath(string $filename): string
-    {
-        if (($fileRealPath = realpath($filename)) === false) {
-            $fileRealPath = stream_resolve_include_path($filename);
-        }
-
-        if (! $fileRealPath) {
-            throw new InvalidArgumentException(sprintf(
-                'No file for %s was found.',
-                $filename
-            ));
-        }
-
-        return $fileRealPath;
     }
 
     /**

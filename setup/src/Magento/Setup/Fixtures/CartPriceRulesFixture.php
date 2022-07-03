@@ -190,7 +190,7 @@ class CartPriceRulesFixture extends Fixture
                 'uses_per_customer'     => '',
                 'from_date'             => '',
                 'to_date'               => '',
-                'sort_order'            => '100',
+                'sort_order'            => '',
                 'is_rss'                => '1',
                 'rule'                  => $this->generateCondition($i, $categoriesArray),
                 'simple_action'             => 'by_percent',
@@ -264,7 +264,7 @@ class CartPriceRulesFixture extends Fixture
                 'type'      => \Magento\SalesRule\Model\Rule\Condition\Product::class,
                 'attribute' => 'category_ids',
                 'operator'  => '==',
-                'value'     => $categoriesArray[intdiv($ruleId, 4) % count($categoriesArray)][0],
+                'value'     => $categoriesArray[($ruleId / 4) % count($categoriesArray)][0],
             ];
 
             $subtotal = [0, 5, 10, 15];
@@ -316,7 +316,7 @@ class CartPriceRulesFixture extends Fixture
                 'type'      => \Magento\SalesRule\Model\Rule\Condition\Address::class,
                 'attribute' => 'region',
                 'operator'  => '==',
-                'value'     => $regions[intdiv($ruleId, 4) % 50],
+                'value'     => $regions[($ruleId / 4) % 50],
             ];
 
             $subtotals = [0, 5, 10, 15];
@@ -385,7 +385,7 @@ class CartPriceRulesFixture extends Fixture
                 'uses_per_customer'     => '',
                 'from_date'             => '',
                 'to_date'               => '',
-                'sort_order'            => '50',
+                'sort_order'            => '',
                 'is_rss'                => '1',
                 'rule'                  => $this->generateAdvancedCondition($i, $categoriesArray),
                 'simple_action'             => 'cart_fixed',

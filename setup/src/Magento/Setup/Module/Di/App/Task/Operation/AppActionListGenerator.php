@@ -20,7 +20,7 @@ class AppActionListGenerator implements OperationInterface
     private $moduleReader;
 
     /**
-     * @var ConfigWriterInterface
+     * @var \Magento\Framework\App\ObjectManager\ConfigWriterInterface
      */
     private $configWriter;
 
@@ -42,11 +42,10 @@ class AppActionListGenerator implements OperationInterface
     public function doOperation()
     {
         $actionList = $this->moduleReader->getActionFiles();
-
-        // sort configuration to have it in the same order on every build
-        ksort($actionList);
-
-        $this->configWriter->write('app_action_list', $actionList);
+        $this->configWriter->write(
+            'app_action_list',
+            $actionList
+        );
     }
 
     /**
